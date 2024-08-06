@@ -11,7 +11,7 @@
 	<groupId>training</groupId>
 	<artifactId>sortir-java</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>siteflow-back</name>
+	<name>sortir-java</name>
 	<description>training project SORTIR</description>
 	<properties>
 		<java.version>17</java.version>

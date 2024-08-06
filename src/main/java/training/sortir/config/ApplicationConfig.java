@@ -1,6 +1,6 @@
 package training.sortir.config;
 
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

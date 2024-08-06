@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SiteflowBackApplication {
+public class SortirApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SiteflowBackApplication.class, args);
+		SpringApplication.run(SortirApplication.class, args);
 	}
 
 

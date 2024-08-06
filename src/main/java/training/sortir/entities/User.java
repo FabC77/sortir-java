@@ -25,18 +25,27 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
     @NonNull
     private String username;
-
+    @NonNull
     private String firstname;
+    @NonNull
     private String lastname;
+    @Column(unique = true, nullable = false)
     private String email;
-
+    private String phoneNumber;
     private String password;
+    private boolean IsAdmin;
+    private boolean IsActive = true;
+    private int CampusId;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @ManyToMany(mappedBy = "members")
+    private List<Event> events = new ArrayList<>();
+
+   // private List<Event> createdEvents = new ArrayList<>();
 
     @JsonManagedReference("owner-messages")
     @OneToMany(mappedBy = "owner")
@@ -50,4 +59,6 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
+
+    //TODO : méthodes pour set et get createdevents
 }
