@@ -1,8 +1,10 @@
 package training.sortir.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import training.sortir.entities.City;
 
-@Service
-public interface CityRepository extends JpaRepository<CityRepository, Long> {
+@Repository
+public interface CityRepository extends JpaRepository<City, Long> {
 }

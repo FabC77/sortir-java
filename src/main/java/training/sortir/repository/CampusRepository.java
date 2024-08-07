@@ -5,6 +5,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import training.sortir.entities.Campus;
 
-@Service
+@Repository
 public interface CampusRepository extends JpaRepository<Campus,Long> {
 }
