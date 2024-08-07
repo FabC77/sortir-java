@@ -23,4 +23,5 @@ public class Campus {
     @OneToMany(mappedBy="campus")
 private List<Event> events = new ArrayList<>();
 
+    public Campus(String name) {this.name = name;  }
 }

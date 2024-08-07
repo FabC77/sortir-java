@@ -22,4 +22,6 @@ public class City {
 
     @OneToMany(mappedBy = "city")
     private List<Location> locations = new ArrayList<>();
+
+    public City(String name,String zipCode) { this.name = name; this.zipCode = zipCode; }
 }
