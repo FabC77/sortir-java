@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import training.sortir.DTOs.MessageDTO;
-import training.sortir.DTOs.UserDTO;
+import training.sortir.dto.MessageDTO;
+import training.sortir.dto.UserDTO;
 import training.sortir.service.MessageService;
 import training.sortir.service.UserService;
 
@@ -33,17 +33,7 @@ public class MainController {
 
     /* USERS CRUD */
 
-    @PostMapping("/users/create")
-    public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
-        System.out.println("REST Create User START");
-        boolean isCreated = userService.createUser(user);
-        System.out.println("User created: " + isCreated);
-        if (isCreated) {
-            return ResponseEntity.ok().body("yes");
-        } else {
-            return ResponseEntity.badRequest().body("no");
-        }
-    }
+
 
     @PostMapping("/users/login")
     public ResponseEntity<?> login(@RequestBody UserDTO user) {
@@ -58,7 +48,7 @@ public class MainController {
     @DeleteMapping("/users/{userId}/delete")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
         if (userService.deleteUser(userId)) {
-            userService.logout(userId);
+           // userService.logout(userId);
             return ResponseEntity.ok().body("Compte supprimé avec succès");
         } else {
 

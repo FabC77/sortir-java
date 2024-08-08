@@ -2,7 +2,7 @@ package training.sortir.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
-import training.sortir.DTOs.MessageDTO;
+import training.sortir.dto.MessageDTO;
 
 import java.util.List;
 import java.util.UUID;

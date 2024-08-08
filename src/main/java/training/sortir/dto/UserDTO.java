@@ -1,4 +1,4 @@
-package training.sortir.DTOs;
+package training.sortir.dto;
 
 
 import lombok.AllArgsConstructor;
@@ -21,6 +21,7 @@ public class UserDTO {
     private String lastname;
     private String username;
     private String password;
+    private String email;
     private List<Message> messages = new ArrayList<>();
 
 }

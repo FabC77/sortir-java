@@ -3,7 +3,7 @@ package training.sortir.service.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import training.sortir.DTOs.MessageDTO;
+import training.sortir.dto.MessageDTO;
 import training.sortir.config.JwtService;
 import training.sortir.entities.Message;
 import training.sortir.repository.MessageRepository;

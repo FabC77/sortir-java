@@ -1,4 +1,4 @@
-package training.sortir.DTOs;
+package training.sortir.dto;
 
 
 import lombok.AllArgsConstructor;

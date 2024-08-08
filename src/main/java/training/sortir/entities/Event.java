@@ -1,8 +1,11 @@
 package training.sortir.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
+import org.springframework.boot.convert.DataSizeUnit;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -19,7 +22,7 @@ import java.util.UUID;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @NonNull
     private EventStatus status = EventStatus.DRAFT;
@@ -27,9 +30,12 @@ public class Event {
     private UUID organizerId;
     private String name;
     private String infos;
-      @ManyToOne
+private String reason;
+    private byte[] picture;
+    @JsonBackReference("location-events")
+    @ManyToOne
     private Location location;
-
+@JsonBackReference("campus-events")
     @ManyToOne
     private Campus campus;
     private Date startDate;
@@ -37,7 +43,7 @@ public class Event {
     private Date deadline;
 
     @ManyToMany
-    @JoinTable(name="event_members",
-    joinColumns = @JoinColumn(name="event_id"), inverseJoinColumns = @JoinColumn(name="member_id"))
+    @JoinTable(name = "event_members",
+            joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "member_id"))
     private List<User> members = new ArrayList<>();
 }

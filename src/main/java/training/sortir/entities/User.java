@@ -37,10 +37,11 @@ public class User implements UserDetails {
     private String password;
     private boolean IsAdmin;
     private boolean IsActive = true;
-    private int CampusId;
+    private int campusId;
+    private byte[] profilePicture;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.USER;
 
     @ManyToMany(mappedBy = "members")
     private List<Event> events = new ArrayList<>();

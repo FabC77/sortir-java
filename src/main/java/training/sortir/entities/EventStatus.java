@@ -6,5 +6,6 @@ public enum EventStatus {
     CLOSED,
     CANCELLED,
     FINISHED,
-    OPEN;
+    OPEN,
+    ARCHIVED
 }

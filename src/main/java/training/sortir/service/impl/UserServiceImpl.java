@@ -1,8 +1,8 @@
 package training.sortir.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import training.sortir.DTOs.UserDTO;
+import training.sortir.dto.UserDTO;
 import training.sortir.entities.User;
 import training.sortir.repository.UserRepository;
 import training.sortir.service.UserService;
@@ -13,27 +13,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
-
-    @Autowired
-    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository) {
-        this.userMapper = userMapper;
-        this.userRepository = userRepository;
-    }
-
-    @Override
-    public boolean createUser(UserDTO userDTO) {
-        User newUser = userMapper.dtoToUser(userDTO);
-
-        if (!userRepository.existsById(newUser.getId())) {
-            userRepository.save(newUser);
-            return true;
-        } else throw new RuntimeException("bug repository save user");
-
-    }
 
     @Override
     public boolean login(UserDTO userDTO) {
@@ -43,16 +27,10 @@ public class UserServiceImpl implements UserService {
         }
         User userReal = user.get();
         if (userReal.getPassword().equals(userDTO.getPassword())) {
-            return true; // Le mot de passe correspond
+            return true;
         } else {
-            return false; // Le mot de passe ne correspond pas
+            return false;
         }
-    }
-
-    @Override
-    public boolean logout(UUID userId) {
-        // à faire
-        return true;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package training.sortir.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,14 +25,20 @@ public class Location {
     private String address;
     private float latitude;
     private float longitude;
+    @JsonBackReference("city-locations")
     @ManyToOne
     private City city;
 
+    @JsonManagedReference("location-events")
     @OneToMany(mappedBy = "location")
     private List<Event> events = new ArrayList<>();
 //    @NonNull
 //    private long cityId;
 //
 
-
+public Location (String name,String address, City city) {
+    this.name = name;
+    this.address = address;
+    this.city = city ;
+}
 }

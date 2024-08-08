@@ -1,5 +1,6 @@
 package training.sortir.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,7 @@ public class Campus {
     private int id;
     @NonNull
     private String name;
-
+@JsonManagedReference("campus-events")
     @OneToMany(mappedBy="campus")
 private List<Event> events = new ArrayList<>();
 

@@ -1,4 +1,5 @@
 package training.sortir.entities;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class City {
     @NonNull
     private String zipCode;
 
+    @JsonManagedReference("city-locations")
     @OneToMany(mappedBy = "city")
     private List<Location> locations = new ArrayList<>();
 

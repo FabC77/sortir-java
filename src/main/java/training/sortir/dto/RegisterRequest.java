@@ -1,4 +1,4 @@
-package training.sortir.controller.auth;
+package training.sortir.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,4 +27,14 @@ public class RegisterRequest {
     @NotBlank(message = "lastname is empty")
     @Size(min = 3, max = 15)
     private String password;
+    @NotNull(message = "email is null")
+    @NotBlank(message = "email is empty")
+    private String email;
+
+
+    private String phoneNumber;
+    @NotNull(message = "CampusId is null")
+    @NotBlank(message = "CampusId is empty")
+    private Integer campusId;
+    private byte[] profilePicture;
 }

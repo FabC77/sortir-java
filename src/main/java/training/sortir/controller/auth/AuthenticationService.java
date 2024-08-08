@@ -6,6 +6,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import training.sortir.config.JwtService;
+import training.sortir.dto.RegisterRequest;
 import training.sortir.entities.Role;
 import training.sortir.entities.User;
 import training.sortir.repository.UserRepository;
@@ -28,8 +29,11 @@ public class AuthenticationService {
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
                 .username(request.getUsername())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .campusId(request.getCampusId())
+                .profilePicture(request.getProfilePicture())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
                 .build();
         var savedUser = repository.save(user);
         var jwtToken = jwtService.generateToken(user);
