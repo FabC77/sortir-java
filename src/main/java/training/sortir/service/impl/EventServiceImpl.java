@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import training.sortir.config.JwtService;
+import training.sortir.dto.CancelEventRequest;
 import training.sortir.dto.CreateEventRequest;
 import training.sortir.dto.EventResponse;
 import training.sortir.dto.UpdateEventRequest;
@@ -20,6 +21,7 @@ import training.sortir.tools.UserMapper;
 
 import java.nio.file.AccessDeniedException;
 import java.security.Principal;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +57,7 @@ public class EventServiceImpl implements EventService {
                 .duration(event.getDuration())
                 .deadline(event.getDeadline())
                 .members(event.getMembers())
+                .lastUpdated(new Date())
                 .build();
 
         eventRepository.save(newEvent);
@@ -77,7 +80,8 @@ public class EventServiceImpl implements EventService {
         Campus campus = campusRepository.findById(user.getCampusId())
                 .orElseThrow(() -> new EntityNotFoundException("Campus not found with ID: " + user.getCampusId()));
 
-        System.out.println("TEST orga id avant bloc" + event.getOrganizerId() + "   " + user.getId());
+        if (!event.getOrganizerId().equals(user.getId())) throw new IllegalStateException("User is not authorized to update");
+
         EventResponse eventResponse;
 
         if (dto.getName() != null) event.setName(dto.getName());
@@ -102,7 +106,7 @@ public class EventServiceImpl implements EventService {
         if (dto.getDeadline() != null) event.setDeadline(dto.getDeadline());
         if (dto.getMaxMembers() != 0) event.setMaxMembers(dto.getMaxMembers());
 
-
+        event.setLastUpdated(new Date());
         eventRepository.save(event);
         eventResponse = eventMapper.eventToDto(event);
         eventResponse.setOrganizerName(user.getFirstname() + " " + user.getLastname());
@@ -112,5 +116,19 @@ public class EventServiceImpl implements EventService {
         eventResponse.setCampusName(campus.getName());
 
         return eventResponse;
+    }
+
+    @Override
+    public boolean cancel(CancelEventRequest dto, long id, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        Event event = eventRepository.findById(id).orElseThrow();
+        if (!event.getOrganizerId().equals(user.getId())) throw new IllegalStateException("User is not authorized to update");
+        if (new Date().after(event.getStartDate())) throw new IllegalStateException("Active event can't be canceled");
+        event.setStatus(EventStatus.CANCELLED);
+        event.setReason(dto.getReason());
+        event.setLastUpdated(new Date());
+        eventRepository.save(event);
+        return true;
     }
 }

@@ -36,5 +36,6 @@ public class EventResponse {
     private Duration duration;
     private Date deadline;
     private int maxMembers;
+    private Date lastUpdated;
     private List<User> members;
 }

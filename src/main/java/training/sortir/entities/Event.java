@@ -41,6 +41,7 @@ public class Event {
     private Date startDate;
     private Duration duration;
     private Date deadline;
+    private Date lastUpdated;
     private int maxMembers;
     @ManyToMany
     @JoinTable(name = "event_members",
