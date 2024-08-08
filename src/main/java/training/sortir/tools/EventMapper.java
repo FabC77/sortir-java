@@ -4,15 +4,20 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 import training.sortir.dto.EventResponse;
+import training.sortir.dto.MemberDto;
 import training.sortir.dto.UpdateEventRequest;
 import training.sortir.entities.Event;
 import training.sortir.entities.Location;
+import training.sortir.entities.User;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 @Component
 public interface EventMapper {
 
 
+List<MemberDto> membersToDto(List<User> users);
 
     EventResponse eventToDto(Event event);
 

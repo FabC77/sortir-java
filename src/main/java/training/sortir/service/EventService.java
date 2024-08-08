@@ -1,11 +1,8 @@
 package training.sortir.service;
 
-import training.sortir.dto.CancelEventRequest;
-import training.sortir.dto.CreateEventRequest;
-import training.sortir.dto.EventResponse;
-import training.sortir.dto.UpdateEventRequest;
+import training.sortir.dto.*;
 
-import java.security.Principal;
+import java.util.List;
 
 public interface EventService {
     EventResponse register(CreateEventRequest event, String username);
@@ -13,4 +10,8 @@ public interface EventService {
     EventResponse update(UpdateEventRequest event, long id, String username);
 
     boolean cancel(CancelEventRequest event, long id, String username);
+
+    List<MemberDto> joinEvent(long id, String username);
+
+    List<MemberDto> leaveEvent(long id, String username);
 }

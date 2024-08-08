@@ -5,13 +5,11 @@ import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import training.sortir.dto.CancelEventRequest;
-import training.sortir.dto.CreateEventRequest;
-import training.sortir.dto.EventResponse;
-import training.sortir.dto.UpdateEventRequest;
+import training.sortir.dto.*;
 import training.sortir.service.EventService;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -44,5 +42,20 @@ public class EventController {
             //TODO: traiter les cas
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to cancel event.");
         }
+    }
+
+    @PostMapping("/event/{id}/join")
+    public ResponseEntity<?> joinEvent(@PathVariable long id, Principal principal) {
+        String username = principal.getName();
+
+        List<MemberDto> members = eventService.joinEvent(id, username);
+        return ResponseEntity.status(HttpStatus.OK).body(members);
+    }
+    @DeleteMapping("/event/{id}/leave")
+    public ResponseEntity<?> leaveEvent(@PathVariable long id, Principal principal) {
+        String username = principal.getName();
+
+        List<MemberDto> members = eventService.leaveEvent(id, username);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(members);
     }
 }

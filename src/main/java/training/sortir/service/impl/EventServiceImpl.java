@@ -6,10 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import training.sortir.config.JwtService;
-import training.sortir.dto.CancelEventRequest;
-import training.sortir.dto.CreateEventRequest;
-import training.sortir.dto.EventResponse;
-import training.sortir.dto.UpdateEventRequest;
+import training.sortir.dto.*;
 import training.sortir.entities.*;
 import training.sortir.repository.CampusRepository;
 import training.sortir.repository.EventRepository;
@@ -22,6 +19,7 @@ import training.sortir.tools.UserMapper;
 import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -80,7 +78,8 @@ public class EventServiceImpl implements EventService {
         Campus campus = campusRepository.findById(user.getCampusId())
                 .orElseThrow(() -> new EntityNotFoundException("Campus not found with ID: " + user.getCampusId()));
 
-        if (!event.getOrganizerId().equals(user.getId())) throw new IllegalStateException("User is not authorized to update");
+        if (!event.getOrganizerId().equals(user.getId()))
+            throw new IllegalStateException("User is not authorized to update");
 
         EventResponse eventResponse;
 
@@ -123,12 +122,50 @@ public class EventServiceImpl implements EventService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         Event event = eventRepository.findById(id).orElseThrow();
-        if (!event.getOrganizerId().equals(user.getId())) throw new IllegalStateException("User is not authorized to update");
+        if (!event.getOrganizerId().equals(user.getId()))
+            throw new IllegalStateException("User is not authorized to update");
         if (new Date().after(event.getStartDate())) throw new IllegalStateException("Active event can't be canceled");
         event.setStatus(EventStatus.CANCELLED);
         event.setReason(dto.getReason());
         event.setLastUpdated(new Date());
         eventRepository.save(event);
         return true;
+    }
+
+    @Override
+    public List<MemberDto> joinEvent(long id, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        Event event = eventRepository.findById(id).orElseThrow();
+
+        if (user.getId().equals(event.getOrganizerId()))
+            throw new IllegalStateException("The organizer can't join their own event");
+        if (event.getMembers().stream().count() == event.getMaxMembers())
+            throw new IllegalStateException("The event capacity is full");
+        if (event.getMembers().contains(user))
+            throw new IllegalStateException("The user is already registered in the event");
+        List<User> members = event.getMembers();
+        members.add(user);
+        event.setMembers(members);
+        eventRepository.save(event);
+        List<MemberDto> list = eventMapper.membersToDto(members);
+        return list;
+    }
+
+    @Override
+    public List<MemberDto> leaveEvent(long id, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        Event event = eventRepository.findById(id).orElseThrow();
+        List<User> members = event.getMembers();
+
+        if (members.contains(user)) {
+            members.remove(user);
+            event.setMembers(members);
+            eventRepository.save(event);
+        }
+        List<MemberDto> list = eventMapper.membersToDto(members);
+        return list;
     }
 }

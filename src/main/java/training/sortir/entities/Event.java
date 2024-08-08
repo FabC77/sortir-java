@@ -43,7 +43,7 @@ public class Event {
     private Date deadline;
     private Date lastUpdated;
     private int maxMembers;
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "event_members",
             joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "member_id"))
     private List<User> members = new ArrayList<>();
