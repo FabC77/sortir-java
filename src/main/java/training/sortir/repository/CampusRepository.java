@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service;
 import training.sortir.entities.Campus;
 
 @Repository
-public interface CampusRepository extends JpaRepository<Campus,Long> {
+public interface CampusRepository extends JpaRepository<Campus,Integer> {
 }

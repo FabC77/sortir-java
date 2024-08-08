@@ -34,13 +34,14 @@ public class CreateEventRequest {
     private UUID locationId;
     @NotNull
     @NotBlank
-    private long campusId;
-    @NotNull
-    @NotBlank
     private Date startDate;
     private Duration duration;
     @NotNull
     @NotBlank
     private Date deadline;
+    @NotNull
+    @NotBlank
+    private int maxMembers;
     private List<User> members;
+
 }
