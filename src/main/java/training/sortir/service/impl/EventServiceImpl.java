@@ -169,7 +169,7 @@ public class EventServiceImpl implements EventService {
         List<User> members = event.getMembers();
         members.add(user);
         event.setMembers(members);
-        event.setCurrentMembers(event.getCurrentMembers()+1);
+        event.setCurrentMembers(event.getCurrentMembers() + 1);
         user.getEvents().add(event);
         eventRepository.save(event);
         List<MemberDto> list = eventMapper.membersToDto(members);
@@ -186,7 +186,7 @@ public class EventServiceImpl implements EventService {
             throw new IllegalStateException("The organizer can't leave his own event");
 
         event.removeMember(user);
-        event.setCurrentMembers(event.getCurrentMembers()-1);
+        event.setCurrentMembers(event.getCurrentMembers() - 1);
 
         user.removeEvent(event);
         eventRepository.save(event);
@@ -234,6 +234,21 @@ public class EventServiceImpl implements EventService {
             throw new IllegalStateException("User is not authorized to see the event");
         EventResponse dto = eventMapper.eventToDto(event);
         return dto;
+    }
+
+    @Override
+    public List<SearchedEventDto> getCampusEvents(int campusId, String username) {
+        List<Event> campusEvents = eventRepository.findByCampusId(campusId);
+
+        List<SearchedEventDto> events = new ArrayList<SearchedEventDto>();
+        for (Event campEvent : campusEvents) {
+            SearchedEventDto e = eventMapper.searchedEventToDto(campEvent);
+            User org = userRepository.findById(campEvent.getOrganizerId()).orElseThrow();
+            e.setOrganizerName(org.getFirstname() + " " + org.getLastname());
+            e.setLocationName(campEvent.getLocation().getName());
+            events.add(e);
+        }
+        return events;
     }
 
     private boolean checkStatusChange(Event event) {

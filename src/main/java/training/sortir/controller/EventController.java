@@ -1,7 +1,6 @@
 package training.sortir.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,6 +71,12 @@ public class EventController {
         String username = principal.getName();
         EventResponse response = eventService.getEvent(id, username);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    @GetMapping("/event/{campusId}/search")
+    public ResponseEntity<List<SearchedEventDto>> getSearchedCampusEvents(@PathVariable int campusId, Principal principal){
+        String username = principal.getName();
+        List<SearchedEventDto> events = eventService.getCampusEvents(campusId,username);
+        return ResponseEntity.status(HttpStatus.OK).body(events);
     }
 
 }
