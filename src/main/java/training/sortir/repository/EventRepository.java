@@ -7,4 +7,6 @@ import training.sortir.entities.Event;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event,Long> {
+
+
 }

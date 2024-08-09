@@ -35,15 +35,6 @@ public class MainController {
 
 
 
-    @PostMapping("/users/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO user) {
-
-        if (userService.login(user)) {
-            return ResponseEntity.ok().body(messageService.getMessages());
-        } else {
-            return ResponseEntity.badRequest().body("échec");
-        }
-    }
 
     @DeleteMapping("/users/{userId}/delete")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
@@ -54,11 +45,6 @@ public class MainController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la suppression du compte");
         }
-    }
-
-    @PostMapping("/users/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        return ResponseEntity.ok().body("Vous êtes déconnecté");
     }
 
 

@@ -15,4 +15,5 @@ public class MemberDto {
     private String lastname;
     private byte[] picture;
     private String username;
+    private boolean isOrganizer;
 }

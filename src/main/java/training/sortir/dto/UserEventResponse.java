@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import training.sortir.entities.Campus;
 import training.sortir.entities.EventStatus;
-import training.sortir.entities.Location;
 import training.sortir.entities.User;
 
 import java.time.Duration;
@@ -18,25 +16,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventResponse {
+public class UserEventResponse {
 
     private long id;
     private EventStatus status;
     //private UUID organizerId;
     private String organizerName;
+    private boolean isOrganizer;
     private String name;
-    private String infos;
     private String reason;
-    private byte[] picture;
-    private UUID locationId;
-    private String locationName;
     private int campusId;
     private String campusName;
     private Date startDate;
-    private Duration duration;
     private Date deadline;
     private int maxMembers;
     private int currentMembers;
-    private Date lastUpdated;
-    private List<MemberDto> members;
 }

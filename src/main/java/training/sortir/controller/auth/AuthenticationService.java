@@ -32,6 +32,8 @@ public class AuthenticationService {
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .campusId(request.getCampusId())
+                .role(Role.USER)
+                .IsActive(true)
                 .profilePicture(request.getProfilePicture())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();

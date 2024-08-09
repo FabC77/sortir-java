@@ -4,8 +4,6 @@ package training.sortir.entities;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.BatchSize;
-import org.springframework.boot.convert.DataSizeUnit;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -40,11 +38,19 @@ public class Event {
     private Campus campus;
     private Date startDate;
     private Duration duration;
+    private Date archiveDate;
     private Date deadline;
     private Date lastUpdated;
     private int maxMembers;
+    @NonNull
+    private int currentMembers;
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "event_members",
             joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "member_id"))
     private List<User> members = new ArrayList<>();
+
+    public void removeMember(User user) {
+        this.members.remove(user);
+        user.getEvents().remove(this);
+    }
 }

@@ -61,5 +61,8 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
-    //TODO : méthodes pour set et get createdevents
+    public void removeEvent(Event event) {
+        this.events.remove(event);
+        event.getMembers().remove(this);
+    }
 }

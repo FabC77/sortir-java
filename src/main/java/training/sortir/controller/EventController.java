@@ -51,6 +51,7 @@ public class EventController {
         List<MemberDto> members = eventService.joinEvent(id, username);
         return ResponseEntity.status(HttpStatus.OK).body(members);
     }
+
     @DeleteMapping("/event/{id}/leave")
     public ResponseEntity<?> leaveEvent(@PathVariable long id, Principal principal) {
         String username = principal.getName();
@@ -58,4 +59,19 @@ public class EventController {
         List<MemberDto> members = eventService.leaveEvent(id, username);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(members);
     }
+
+    @GetMapping("/event/user-events")
+    public ResponseEntity<List<UserEventResponse>> getUserEvents(Principal principal) {
+        String username = principal.getName();
+        List<UserEventResponse> events = eventService.getUserEvents(username);
+        return ResponseEntity.status(HttpStatus.OK).body(events);
+    }
+
+    @GetMapping("/event/{id}")
+    public ResponseEntity<EventResponse> getEvent(@PathVariable long id, Principal principal) {
+        String username = principal.getName();
+        EventResponse response = eventService.getEvent(id, username);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 }

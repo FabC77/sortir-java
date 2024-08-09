@@ -4,8 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import training.sortir.config.JwtService;
 import training.sortir.dto.*;
 import training.sortir.entities.*;
 import training.sortir.repository.CampusRepository;
@@ -14,12 +12,15 @@ import training.sortir.repository.LocationRepository;
 import training.sortir.repository.UserRepository;
 import training.sortir.service.EventService;
 import training.sortir.tools.EventMapper;
-import training.sortir.tools.UserMapper;
 
-import java.nio.file.AccessDeniedException;
-import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,33 +33,44 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
 
 
-    public EventResponse register(CreateEventRequest event, String username) {
+    public EventResponse register(CreateEventRequest dto, String username) {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        Location location = locationRepository.findById(event.getLocationId())
-                .orElseThrow(() -> new EntityNotFoundException("Location not found with ID: " + event.getLocationId()));
+        Location location = locationRepository.findById(dto.getLocationId())
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with ID: " + dto.getLocationId()));
 
         Campus campus = campusRepository.findById(user.getCampusId())
                 .orElseThrow(() -> new EntityNotFoundException("Campus not found with ID: " + user.getCampusId()));
 
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dto.getStartDate());
+        cal.add(Calendar.DAY_OF_MONTH, 30);
+        Date archiveDate = cal.getTime();
+
         Event newEvent = Event.builder()
-                .name(event.getName())
-                .infos(event.getInfos())
+                .name(dto.getName())
+                .infos(dto.getInfos())
                 .organizerId(user.getId())
-                .status(event.getStatus())
-                .picture(event.getPicture())
+                .status(dto.getStatus())
+                .picture(dto.getPicture())
                 .location(location)
                 .campus(campus)
-                .startDate(event.getStartDate())
-                .duration(event.getDuration())
-                .deadline(event.getDeadline())
-                .members(event.getMembers())
+                .startDate(dto.getStartDate())
+                .duration(dto.getDuration())
+                .archiveDate(archiveDate)
+                .maxMembers(dto.getMaxMembers())
+                .currentMembers(1)
+                .members(new ArrayList<>())
+                .deadline(dto.getDeadline())
                 .lastUpdated(new Date())
                 .build();
 
+        newEvent.getMembers().add(user);
+        user.getEvents().add(newEvent);
         eventRepository.save(newEvent);
+
 
         EventResponse response = eventMapper.eventToDto(newEvent);
         response.setOrganizerName(user.getFirstname() + " " + user.getLastname());
@@ -106,6 +118,7 @@ public class EventServiceImpl implements EventService {
         if (dto.getMaxMembers() != 0) event.setMaxMembers(dto.getMaxMembers());
 
         event.setLastUpdated(new Date());
+
         eventRepository.save(event);
         eventResponse = eventMapper.eventToDto(event);
         eventResponse.setOrganizerName(user.getFirstname() + " " + user.getLastname());
@@ -126,7 +139,14 @@ public class EventServiceImpl implements EventService {
             throw new IllegalStateException("User is not authorized to update");
         if (new Date().after(event.getStartDate())) throw new IllegalStateException("Active event can't be canceled");
         event.setStatus(EventStatus.CANCELLED);
+
         event.setReason(dto.getReason());
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.DAY_OF_MONTH, 30);
+        Date archiveDate = cal.getTime();
+        event.setArchiveDate(archiveDate);
         event.setLastUpdated(new Date());
         eventRepository.save(event);
         return true;
@@ -142,11 +162,15 @@ public class EventServiceImpl implements EventService {
             throw new IllegalStateException("The organizer can't join their own event");
         if (event.getMembers().stream().count() == event.getMaxMembers())
             throw new IllegalStateException("The event capacity is full");
+        if (event.getStatus() != EventStatus.OPEN) throw new IllegalStateException("The event is closed");
+
         if (event.getMembers().contains(user))
             throw new IllegalStateException("The user is already registered in the event");
         List<User> members = event.getMembers();
         members.add(user);
         event.setMembers(members);
+        event.setCurrentMembers(event.getCurrentMembers()+1);
+        user.getEvents().add(event);
         eventRepository.save(event);
         List<MemberDto> list = eventMapper.membersToDto(members);
         return list;
@@ -158,14 +182,110 @@ public class EventServiceImpl implements EventService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         Event event = eventRepository.findById(id).orElseThrow();
-        List<User> members = event.getMembers();
+        if (user.getId().equals(event.getOrganizerId()))
+            throw new IllegalStateException("The organizer can't leave his own event");
 
-        if (members.contains(user)) {
-            members.remove(user);
-            event.setMembers(members);
+        event.removeMember(user);
+        event.setCurrentMembers(event.getCurrentMembers()-1);
+
+        user.removeEvent(event);
+        eventRepository.save(event);
+
+        List<MemberDto> list = eventMapper.membersToDto(event.getMembers());
+        return list;
+    }
+
+    @Override
+    public List<UserEventResponse> getUserEvents(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        List<Event> events = user.getEvents();
+        for (Event event : events) {
+            if (checkStatusChange(event)) {
+                eventRepository.save(event);
+            }
+
+
+        }
+        events.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);
+        List<Long> organizedEvents = events.stream()
+                .filter(e -> e.getOrganizerId().equals(user.getId()))
+                .map(Event::getId)
+                .collect(Collectors.toList());
+        List<UserEventResponse> userEvents = eventMapper.userEventsToDto(events);
+        for (UserEventResponse e : userEvents) {
+            if (organizedEvents.contains(e.getId())) {
+                e.setOrganizer(true);
+            }
+        }
+        return userEvents;
+    }
+
+    @Override
+    public EventResponse getEvent(long id, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        Event event = eventRepository.findById(id).orElseThrow();
+        if (checkStatusChange(event)) {
             eventRepository.save(event);
         }
-        List<MemberDto> list = eventMapper.membersToDto(members);
-        return list;
+
+        if (event.getStatus() == EventStatus.DRAFT && !event.getOrganizerId().equals(user.getId()))
+            throw new IllegalStateException("User is not authorized to see the event");
+        EventResponse dto = eventMapper.eventToDto(event);
+        return dto;
+    }
+
+    private boolean checkStatusChange(Event event) {
+        Date now = new Date();
+        boolean hasChanged = false;
+        switch (event.getStatus()) {
+            case IN_PROGRESS:
+                Instant eventStartInstant = event.getStartDate().toInstant();
+                Instant endInstant = eventStartInstant.plus(event.getDuration());
+                Date endDate = Date.from(endInstant);
+                if (now.after(endDate)) {
+                    event.setStatus(EventStatus.FINISHED);
+                    hasChanged = true;
+                }
+                break;
+            case DRAFT:
+                break;
+            case CLOSED:
+                if (event.getMembers().stream().count() < event.getMaxMembers() && !(new Date().after(event.getDeadline()))) {
+                    event.setStatus(EventStatus.OPEN);
+                    event.setLastUpdated(now);
+                    hasChanged = true;
+                }
+                if (now.after(event.getStartDate())) {
+                    event.setStatus(EventStatus.IN_PROGRESS);
+                    hasChanged = true;
+                }
+                break;
+            case CANCELLED:
+                if (new Date().after(event.getArchiveDate())) {
+                    event.setStatus(EventStatus.ARCHIVED);
+                    hasChanged = true;
+                }
+                break;
+            case FINISHED:
+                if (now.after(event.getArchiveDate())) {
+                    event.setStatus(EventStatus.ARCHIVED);
+                }
+                break;
+            case OPEN:
+                if (event.getMembers().stream().count() == event.getMaxMembers()) {
+                    event.setStatus(EventStatus.CLOSED);
+                    event.setLastUpdated(now);
+                    hasChanged = true;
+                }
+                break;
+            default:
+                break;
+
+
+        }
+
+        return hasChanged;
     }
 }

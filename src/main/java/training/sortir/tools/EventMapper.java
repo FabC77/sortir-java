@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import training.sortir.dto.EventResponse;
 import training.sortir.dto.MemberDto;
 import training.sortir.dto.UpdateEventRequest;
+import training.sortir.dto.UserEventResponse;
 import training.sortir.entities.Event;
 import training.sortir.entities.Location;
 import training.sortir.entities.User;
@@ -18,6 +19,7 @@ public interface EventMapper {
 
 
 List<MemberDto> membersToDto(List<User> users);
+List<UserEventResponse> userEventsToDto(List<Event> events);
 
     EventResponse eventToDto(Event event);
 

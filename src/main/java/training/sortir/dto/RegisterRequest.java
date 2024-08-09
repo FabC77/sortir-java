@@ -34,7 +34,6 @@ public class RegisterRequest {
 
     private String phoneNumber;
     @NotNull(message = "CampusId is null")
-    @NotBlank(message = "CampusId is empty")
-    private Integer campusId;
+    private int campusId;
     private byte[] profilePicture;
 }
