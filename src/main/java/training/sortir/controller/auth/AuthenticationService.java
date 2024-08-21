@@ -58,6 +58,7 @@ public class AuthenticationService {
         saveUserToken(user, jwtToken);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .fullName(user.getFirstname()+" "+user.getLastname())
                 .build();
     }
 

@@ -27,11 +27,11 @@ public class CreateEventRequest {
     private String infos;
     @NotNull
     @NotBlank
-    private EventStatus status;
+    private boolean isDraft;
     private byte[] picture;
-    @NotNull
-    @NotBlank
     private UUID locationId;
+    private String locationName;
+    private String address;
     @NotNull
     @NotBlank
     private Date startDate;

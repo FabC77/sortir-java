@@ -53,7 +53,7 @@ public class EventServiceImpl implements EventService {
                 .name(dto.getName())
                 .infos(dto.getInfos())
                 .organizerId(user.getId())
-                .status(dto.getStatus())
+                .status(dto.isDraft()? EventStatus.DRAFT : EventStatus.OPEN)
                 .picture(dto.getPicture())
                 .location(location)
                 .campus(campus)
