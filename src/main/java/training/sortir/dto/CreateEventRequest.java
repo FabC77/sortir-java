@@ -31,6 +31,9 @@ public class CreateEventRequest {
     private byte[] picture;
     private String locationId;
     private String locationName;
+    private float longitude;
+    private float latitude;
+    private String cityName;
     private String address;
     @NotNull
     @NotBlank
