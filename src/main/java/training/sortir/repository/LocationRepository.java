@@ -7,5 +7,5 @@ import training.sortir.entities.Location;
 
 import java.util.UUID;
 @Repository
-public interface LocationRepository extends JpaRepository<Location, UUID> {
+public interface LocationRepository extends JpaRepository<Location, String> {
 }

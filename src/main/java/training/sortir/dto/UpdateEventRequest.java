@@ -22,7 +22,7 @@ public class UpdateEventRequest {
     private String infos;
     private String reason;
     private byte[] picture;
-    private UUID locationId;
+    private String locationId;
     private String locationName;
     private Date startDate;
     private Duration duration;

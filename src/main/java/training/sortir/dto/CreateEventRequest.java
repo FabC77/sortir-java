@@ -29,7 +29,7 @@ public class CreateEventRequest {
     @NotBlank
     private boolean isDraft;
     private byte[] picture;
-    private UUID locationId;
+    private String locationId;
     private String locationName;
     private String address;
     @NotNull
