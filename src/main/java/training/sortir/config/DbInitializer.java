@@ -2,13 +2,16 @@ package training.sortir.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import training.sortir.entities.Campus;
 import training.sortir.entities.City;
 import training.sortir.entities.Location;
+import training.sortir.entities.User;
 import training.sortir.repository.CampusRepository;
 import training.sortir.repository.CityRepository;
 import training.sortir.repository.LocationRepository;
+import training.sortir.repository.UserRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -16,11 +19,26 @@ public class DbInitializer {
     private final CityRepository cityRepository;
     private final CampusRepository campusRepository;
     private final LocationRepository locationRepository;
-
+    private final UserRepository userRepository;
+private final PasswordEncoder passwordEncoder;
     @PostConstruct
     public void initialize() {
         System.out.println("Initialisation des données...");
-
+        if (userRepository.count() == 0) {
+            User[] users = new User[]{
+                    new User("fab",
+                            "Fabien",
+                            "C",
+                            "fab@gmail.com",
+                            passwordEncoder.encode("1234"),
+                            1
+                    ),
+                    new User("bob", "Bob","Morane","bob@gmail.com",passwordEncoder.encode("123"),2)
+            };
+            for (User user : users) {
+                userRepository.save(user);
+            }
+        }
 
         if (cityRepository.count() == 0) {
             System.out.println("Ajout des villes...");
@@ -85,10 +103,10 @@ public class DbInitializer {
 
 
         }
-        if (locationRepository.count() == 0) {
+         /*  if (locationRepository.count() == 0) {
             System.out.println("Ajout des lieux...");
 
-            Location[] locations = new Location[]{
+          Location[] locations = new Location[]{
                     new Location("Centre Ville", "12 Rue de la Paix", cityRepository.findById(12L).orElseThrow()),
                     new Location("Parc Naturel", "45 Avenue des Champs", cityRepository.findById(1L).orElseThrow()),
                     new Location("Quartier Historique", "78 Boulevard Saint-Germain", cityRepository.findById(2L).orElseThrow()),
@@ -114,6 +132,6 @@ public class DbInitializer {
                 locationRepository.save(location);
             }
 
-        }
+        }*/
     }
 }

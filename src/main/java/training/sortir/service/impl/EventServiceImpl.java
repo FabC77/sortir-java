@@ -1,25 +1,21 @@
 package training.sortir.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import training.sortir.dto.*;
 import training.sortir.entities.*;
-import training.sortir.repository.CampusRepository;
-import training.sortir.repository.EventRepository;
-import training.sortir.repository.LocationRepository;
-import training.sortir.repository.UserRepository;
+import training.sortir.repository.*;
 import training.sortir.service.EventService;
 import training.sortir.tools.EventMapper;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,15 +27,42 @@ public class EventServiceImpl implements EventService {
     private final CampusRepository campusRepository;
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
+    private final CityRepository cityRepository;
 
 
+    @Transactional
     public EventResponse register(CreateEventRequest dto, String username) {
+        System.out.println("in event create service START");
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
+        City city = cityRepository.findByNameAndZipCode(dto.getCityName(), dto.getZipCode())
+                .orElseGet(() -> {
+                    City newCity = City.builder()
+                            .name(dto.getCityName())
+                            .zipCode(dto.getZipCode())
+                            .build();
+                    return cityRepository.save(newCity);
+                });
         Location location = locationRepository.findById(dto.getLocationId())
-                .orElseThrow(() -> new EntityNotFoundException("Location not found with ID: " + dto.getLocationId()));
+                .orElseGet(() -> {
+                    Location newLocation = Location.builder()
+                            .id(dto.getLocationId())
+                            .name(dto.getLocationName() !=null ? dto.getLocationName() : dto.getLocationNotNamed())
+                            .latitude(dto.getLatitude())
+                            .longitude(dto.getLongitude())
+                            .address(dto.getAddress())
+                            .city(city)
+                            .build();
+                    return locationRepository.save(newLocation);
+                });
+        if (city.getLocations() != null) {
+            city.getLocations().add(location);
+        } else {
+            city.setLocations(new ArrayList<>(Collections.singletonList(location)));
+        }
+        cityRepository.save(city);
 
         Campus campus = campusRepository.findById(user.getCampusId())
                 .orElseThrow(() -> new EntityNotFoundException("Campus not found with ID: " + user.getCampusId()));
@@ -49,16 +72,20 @@ public class EventServiceImpl implements EventService {
         cal.add(Calendar.DAY_OF_MONTH, 30);
         Date archiveDate = cal.getTime();
 
+Duration newDuration = Duration.ofHours
+        (dto.getDuration().get("hours") *60*60)
+        .plusMinutes(dto.getDuration().get("minutes")*60);
+
         Event newEvent = Event.builder()
                 .name(dto.getName())
                 .infos(dto.getInfos())
                 .organizerId(user.getId())
-                .status(dto.isDraft()? EventStatus.DRAFT : EventStatus.OPEN)
+                .status(dto.isDraft() ? EventStatus.DRAFT : EventStatus.OPEN)
                 .picture(dto.getPicture())
                 .location(location)
                 .campus(campus)
                 .startDate(dto.getStartDate())
-                .duration(dto.getDuration())
+                .duration(newDuration)
                 .archiveDate(archiveDate)
                 .maxMembers(dto.getMaxMembers())
                 .currentMembers(1)
@@ -69,15 +96,18 @@ public class EventServiceImpl implements EventService {
 
         newEvent.getMembers().add(user);
         user.getEvents().add(newEvent);
-        eventRepository.save(newEvent);
+
+        Event savedEvent = eventRepository.save(newEvent);
 
 
-        EventResponse response = eventMapper.eventToDto(newEvent);
-        response.setOrganizerName(user.getFirstname() + " " + user.getLastname());
-        response.setLocationId(location.getId());
-        response.setLocationName(location.getName());
-        response.setCampusId(campus.getId());
-        response.setCampusName(campus.getName());
+//        EventResponse response = eventMapper.eventToDto(newEvent);
+//        response.setOrganizerName(user.getFirstname() + " " + user.getLastname());
+//        response.setLocationId(location.getId());
+//        response.setLocationName(location.getName());
+//        response.setCampusId(campus.getId());
+//        response.setCampusName(campus.getName());
+        EventResponse response = new EventResponse();
+        response.setId(savedEvent.getId());
         return response;
     }
 

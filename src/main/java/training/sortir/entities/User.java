@@ -65,4 +65,13 @@ public class User implements UserDetails {
         this.events.remove(event);
         event.getMembers().remove(this);
     }
+
+    public User(@NonNull String username, @NonNull String firstname, @NonNull String lastname, String email, String password, int campusId) {
+        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.email = email;
+        this.password = password;
+        this.campusId = campusId;
+    }
 }

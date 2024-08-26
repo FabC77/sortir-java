@@ -22,6 +22,7 @@ public class EventController {
     public ResponseEntity<EventResponse> createEvent(@RequestBody CreateEventRequest request, Principal principal) {
         String username = principal.getName();
         EventResponse response = eventService.register(request, username);
+        System.out.println("in event create controller");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

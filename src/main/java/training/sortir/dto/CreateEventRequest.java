@@ -13,6 +13,7 @@ import training.sortir.entities.User;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -31,14 +32,18 @@ public class CreateEventRequest {
     private byte[] picture;
     private String locationId;
     private String locationName;
+    private String locationNotNamed;
     private float longitude;
     private float latitude;
     private String cityName;
     private String address;
+    private String zipCode;
     @NotNull
     @NotBlank
     private Date startDate;
-    private Duration duration;
+
+    private Map<String,Integer> duration;
+
     @NotNull
     @NotBlank
     private Date deadline;
