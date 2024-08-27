@@ -263,6 +263,20 @@ Duration newDuration = Duration.ofHours
         if (event.getStatus() == EventStatus.DRAFT && !event.getOrganizerId().equals(user.getId()))
             throw new IllegalStateException("User is not authorized to see the event");
         EventResponse dto = eventMapper.eventToDto(event);
+        dto.setLocationId(event.getLocation().getId());
+        dto.setLocationName(event.getLocation().getName());
+        dto.setCampusName(event.getCampus().getName());
+        dto.setCampusId(event.getCampus().getId());
+        dto.setAddress(event.getLocation().getAddress());
+        if(event.getOrganizerId().equals(user.getId())){
+            dto.setCreator(true);
+        }
+        if(event.getMembers().contains(user.getId())){
+            dto.setEventMember(true);
+        }
+        dto.setDuration(event.getDuration().toHours()+"h"+(event.getDuration().toMinutes()%60));
+        User organizer= userRepository.findById(event.getOrganizerId()).orElseThrow();
+        dto.setOrganizerName(organizer.getFirstname()+" "+organizer.getLastname());
         return dto;
     }
 

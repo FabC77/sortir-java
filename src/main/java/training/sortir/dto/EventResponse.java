@@ -22,18 +22,20 @@ public class EventResponse {
 
     private long id;
     private EventStatus status;
-    //private UUID organizerId;
     private String organizerName;
+    private boolean isCreator;
+    private boolean isEventMember;
     private String name;
     private String infos;
     private String reason;
     private byte[] picture;
     private String locationId;
     private String locationName;
+    private String address;
     private int campusId;
     private String campusName;
     private Date startDate;
-    private Duration duration;
+    private String duration;
     private Date deadline;
     private int maxMembers;
     private int currentMembers;

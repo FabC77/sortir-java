@@ -23,7 +23,7 @@ public interface EventMapper {
     SearchedEventDto searchedEventToDto(Event event);
 
 
-
+@Mapping(target="duration",ignore = true)
     EventResponse eventToDto(Event event);
 
     @Mapping(target = "location", ignore = true) // Ignorer la mappage de location pour pouvoir le gérer séparément
