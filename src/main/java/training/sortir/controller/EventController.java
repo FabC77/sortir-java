@@ -37,10 +37,10 @@ public class EventController {
     public ResponseEntity<?> cancelEvent(@RequestBody CancelEventRequest request, @PathVariable long id, Principal principal) {
         String username = principal.getName();
         if (eventService.cancel(request, id, username)) {
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Event cancelled successfully.");
+            return ResponseEntity.status(HttpStatus.ACCEPTED).build();
         } else {
             //TODO: traiter les cas
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to cancel event.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
