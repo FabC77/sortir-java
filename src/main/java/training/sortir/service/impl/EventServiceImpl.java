@@ -49,7 +49,7 @@ public class EventServiceImpl implements EventService {
                 .orElseGet(() -> {
                     Location newLocation = Location.builder()
                             .id(dto.getLocationId())
-                            .name(dto.getLocationName() !=null ? dto.getLocationName() : dto.getLocationNotNamed())
+                            .name(dto.getLocationName() != null ? dto.getLocationName() : dto.getLocationNotNamed())
                             .latitude(dto.getLatitude())
                             .longitude(dto.getLongitude())
                             .address(dto.getAddress())
@@ -72,9 +72,9 @@ public class EventServiceImpl implements EventService {
         cal.add(Calendar.DAY_OF_MONTH, 30);
         Date archiveDate = cal.getTime();
 
-Duration newDuration = Duration.ofHours
-        (dto.getDuration().get("hours") *60*60)
-        .plusMinutes(dto.getDuration().get("minutes")*60);
+        Duration newDuration = Duration.ofHours
+                        (dto.getDuration().get("hours") * 60 * 60)
+                .plusMinutes(dto.getDuration().get("minutes") * 60);
 
         Event newEvent = Event.builder()
                 .name(dto.getName())
@@ -230,24 +230,26 @@ Duration newDuration = Duration.ofHours
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         List<Event> events = user.getEvents();
+        List<UserEventResponse> userEvents = new ArrayList<>();
         for (Event event : events) {
+            System.out.println("DATE DE L'EVENT n°"+event.getId()+ " - heure : "+event.getDeadline().toString());
+            UserEventResponse response = new UserEventResponse();
             if (checkStatusChange(event)) {
                 eventRepository.save(event);
             }
-
-
-        }
-        events.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);
-        List<Long> organizedEvents = events.stream()
-                .filter(e -> e.getOrganizerId().equals(user.getId()))
-                .map(Event::getId)
-                .collect(Collectors.toList());
-        List<UserEventResponse> userEvents = eventMapper.userEventsToDto(events);
-        for (UserEventResponse e : userEvents) {
-            if (organizedEvents.contains(e.getId())) {
-                e.setOrganizer(true);
+            response = eventMapper.eventToUserEventResponse(event);
+            if (event.getOrganizerId().equals(user.getId())) {
+                response.setOrganizerName("Vous");
+                response.setOrganizer(true);
+            } else {
+                User owner = userRepository.findById(event.getOrganizerId()).orElseThrow();
+                response.setOrganizerName(owner.getFirstname() + " " + owner.getLastname());
             }
+userEvents.add(response);
         }
+        userEvents.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);
+
+
         return userEvents;
     }
 
@@ -268,15 +270,15 @@ Duration newDuration = Duration.ofHours
         dto.setCampusName(event.getCampus().getName());
         dto.setCampusId(event.getCampus().getId());
         dto.setAddress(event.getLocation().getAddress());
-        if(event.getOrganizerId().equals(user.getId())){
+        if (event.getOrganizerId().equals(user.getId())) {
             dto.setCreator(true);
         }
-        if(event.getMembers().contains(user.getId())){
+        if (event.getMembers().contains(user.getId())) {
             dto.setEventMember(true);
         }
-        dto.setDuration(event.getDuration().toHours()+"h"+(event.getDuration().toMinutes()%60));
-        User organizer= userRepository.findById(event.getOrganizerId()).orElseThrow();
-        dto.setOrganizerName(organizer.getFirstname()+" "+organizer.getLastname());
+        dto.setDuration(event.getDuration().toHours() + "h" + (event.getDuration().toMinutes() % 60));
+        User organizer = userRepository.findById(event.getOrganizerId()).orElseThrow();
+        dto.setOrganizerName(organizer.getFirstname() + " " + organizer.getLastname());
         return dto;
     }
 
