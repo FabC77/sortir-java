@@ -291,6 +291,39 @@ public class EventServiceImpl implements EventService {
         return events;
     }
 
+    @Override
+    public List<SearchedEventDto> searchEvents(String username, SearchEventRequest req) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        List<SearchedEventDto> eventsDto = new ArrayList<>();
+        List<Event> events = new ArrayList<>();
+
+            if (req.getStartDate() != null && req.getEndDate() != null) {
+                events = eventRepository.findByStartDateBetweenAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getEndDate(), req.getCampusId(), req.getKeyword());
+            } else if (req.getEndDate() != null  ) {
+                events = eventRepository.findByStartDateBeforeAndCampusIdAndNameContainingIgnoreCase(req.getEndDate(), req.getCampusId(),req.getKeyword());
+
+            } else if (req.getStartDate() != null) {
+                events = eventRepository.findByStartDateAfterAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getCampusId(),req.getKeyword());
+
+            } else {
+                events = eventRepository.findByCampusIdAndNameContainingIgnoreCase(req.getCampusId(),req.getKeyword());
+            }
+
+        List<Event> filteredEvents=  events.stream().filter(event -> event.getStatus()!= EventStatus.ARCHIVED && event.getStatus()!= EventStatus.CANCELLED)
+                .toList();
+        for (Event event : filteredEvents) {
+            SearchedEventDto s = new SearchedEventDto();
+            s = eventMapper.searchedEventToDto(event);
+            User org = userRepository.findById(event.getOrganizerId()).orElseThrow();
+            s.setOrganizerName(org.getFirstname() + " " + org.getLastname());
+            s.setLocationName(event.getLocation().getName());
+            s.setCampusId(event.getCampus().getId());
+            eventsDto.add(s);
+        }
+        return eventsDto;
+    }
+
     private boolean checkStatusChange(Event event) {
         Date now = new Date();
         boolean hasChanged = false;

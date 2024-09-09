@@ -14,8 +14,12 @@ public interface EventService {
     List<MemberDto> joinEvent(long id, String username);
 
     List<MemberDto> leaveEvent(long id, String username);
+
     List<UserEventResponse> getUserEvents(String username);
+
     EventResponse getEvent(long id, String username);
+
     List<SearchedEventDto> getCampusEvents(int campusId, String username);
 
+    List<SearchedEventDto> searchEvents(String username, SearchEventRequest req);
 }

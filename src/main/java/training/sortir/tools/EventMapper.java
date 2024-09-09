@@ -19,7 +19,6 @@ public interface EventMapper {
 
     List<UserEventResponse> userEventsToDto(List<Event> events);
 
-
     SearchedEventDto searchedEventToDto(Event event);
 
 

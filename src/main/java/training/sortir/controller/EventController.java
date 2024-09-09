@@ -80,4 +80,12 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(events);
     }
 
+    @GetMapping("/event/search")
+    public ResponseEntity<List<SearchedEventDto>> searchEvent(Principal principal, @RequestBody SearchEventRequest req){
+        String username = principal.getName();
+        List<SearchedEventDto> events = eventService.searchEvents(username,req);
+
+        return ResponseEntity.status(HttpStatus.OK).body(events);
+    }
+
 }

@@ -2,12 +2,15 @@ package training.sortir.controller;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import training.sortir.dto.CampusDTO;
 import training.sortir.dto.MessageDTO;
 import training.sortir.dto.UserDTO;
+import training.sortir.service.MainService;
 import training.sortir.service.MessageService;
 import training.sortir.service.UserService;
 
@@ -17,23 +20,15 @@ import java.util.UUID;
 @CrossOrigin
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class MainController {
 
-    @Autowired
-    MessageService messageService;
-    @Autowired
-    UserService userService;
-    /* TEST */
 
-    @GetMapping("/hello")
-    public String gethello() {
-        System.out.println("HELLO IN");
-        return "hello";
-    }
+    private final MessageService messageService;
+    private final UserService userService;
+    private final MainService mainService;
 
     /* USERS CRUD */
-
-
 
 
     @DeleteMapping("/users/{userId}/delete")
@@ -57,8 +52,9 @@ public class MainController {
         }
         return ResponseEntity.badRequest().body("error");
     }
+
     @GetMapping("/users/{userId}")
-    public UserDTO getUser(@PathVariable UUID userId){
+    public UserDTO getUser(@PathVariable UUID userId) {
         return userService.getUser(userId);
     }
 
@@ -71,9 +67,9 @@ public class MainController {
     public List<MessageDTO> getMessages() {
         return messageService.getMessages();
     }
+
     @GetMapping("/messages/{userId}")
-    public List<MessageDTO> getMessagesFromUser(@PathVariable UUID userId)
-    {
+    public List<MessageDTO> getMessagesFromUser(@PathVariable UUID userId) {
         return messageService.getMessagesFromUser(userId);
     }
 
@@ -82,4 +78,9 @@ public class MainController {
         return userService.getUsers();
     }
 
+    @GetMapping("/campuses")
+    public ResponseEntity<List<CampusDTO>> getCampuses() {
+        List<CampusDTO> response = mainService.getCampuses();
+        return ResponseEntity.ok().body(response);
+    }
 }
