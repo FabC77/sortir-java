@@ -99,13 +99,6 @@ public class EventServiceImpl implements EventService {
 
         Event savedEvent = eventRepository.save(newEvent);
 
-
-//        EventResponse response = eventMapper.eventToDto(newEvent);
-//        response.setOrganizerName(user.getFirstname() + " " + user.getLastname());
-//        response.setLocationId(location.getId());
-//        response.setLocationName(location.getName());
-//        response.setCampusId(campus.getId());
-//        response.setCampusName(campus.getName());
         EventResponse response = new EventResponse();
         response.setId(savedEvent.getId());
         return response;

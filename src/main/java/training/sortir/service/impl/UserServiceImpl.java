@@ -86,7 +86,6 @@ public class UserServiceImpl implements UserService {
             if (!dto.getNewPassword().equals(dto.getConfirmPassword()))
                 throw new IllegalStateException("the passwords don't match");
             user.setPassword(passwordEncoder.encode(dto.getConfirmPassword()));
-            //userRepository.save(user);
 
         }
         if (dto.getFirstname() != null && !dto.getFirstname().isEmpty()) {

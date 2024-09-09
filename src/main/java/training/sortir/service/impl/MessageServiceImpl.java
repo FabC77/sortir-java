@@ -56,14 +56,10 @@ public class MessageServiceImpl implements MessageService {
         if (!messageOptional.isPresent()) {
             throw new RuntimeException("Le message avec l'ID " + messageId + " n'appartient pas à l'utilisateur avec l'ID " + userId);
         }
-
-        // Suppression du message de la base de données
         messageRepository.deleteById(messageId);
 
-        // Récupération de tous les messages restants après la suppression
         List<Message> remainingMessages = messageRepository.findAll();
 
-        // Mapping des messages restants vers des DTO
         return messageMapper.messagesToDTO(remainingMessages);
     }
 
