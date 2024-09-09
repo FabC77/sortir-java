@@ -225,7 +225,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = user.getEvents();
         List<UserEventResponse> userEvents = new ArrayList<>();
         for (Event event : events) {
-            System.out.println("DATE DE L'EVENT n°"+event.getId()+ " - heure : "+event.getDeadline().toString());
+            System.out.println("DATE DE L'EVENT n°" + event.getId() + " - heure : " + event.getDeadline().toString());
             UserEventResponse response = new UserEventResponse();
             if (checkStatusChange(event)) {
                 eventRepository.save(event);
@@ -238,7 +238,8 @@ public class EventServiceImpl implements EventService {
                 User owner = userRepository.findById(event.getOrganizerId()).orElseThrow();
                 response.setOrganizerName(owner.getFirstname() + " " + owner.getLastname());
             }
-userEvents.add(response);
+            response.setLocationName(event.getLocation().getName());
+            userEvents.add(response);
         }
         userEvents.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);
 

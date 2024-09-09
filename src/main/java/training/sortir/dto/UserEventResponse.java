@@ -21,6 +21,7 @@ public class UserEventResponse {
     private long id;
     private EventStatus status;
     private String organizerName;
+    private String locationName;
     private boolean isOrganizer;
     private String name;
     private String reason;
@@ -30,4 +31,5 @@ public class UserEventResponse {
     private Date deadline;
     private int maxMembers;
     private int currentMembers;
+    private Date lastUpdated;
 }
