@@ -31,9 +31,7 @@ public class Location {
     @JsonManagedReference("location-events")
     @OneToMany(mappedBy = "location")
     private List<Event> events = new ArrayList<>();
-//    @NonNull
-//    private long cityId;
-//
+
 
 public Location (String name,String address, City city) {
     this.name = name;

@@ -28,7 +28,7 @@ public interface EventMapper {
 
 UserEventResponse eventToUserEventResponse(Event event);
 
-    @Mapping(target = "location", ignore = true) // Ignorer la mappage de location pour pouvoir le gérer séparément
+    @Mapping(target = "location", ignore = true)
     @Mapping(target = "organizerId", ignore = true)
     Event dtoToEvent(UpdateEventRequest dto);
 

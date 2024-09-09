@@ -19,10 +19,8 @@ public class SearchedEventDto {
     private EventStatus status;
     private String organizerName;
     private String name;
-   // private UUID locationId;
     private String locationName;
     private int campusId;
-    //private String campusName;
     private Date startDate;
     private Duration duration;
     private Date deadline;

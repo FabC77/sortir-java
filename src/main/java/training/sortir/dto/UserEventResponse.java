@@ -20,7 +20,6 @@ public class UserEventResponse {
 
     private long id;
     private EventStatus status;
-    //private UUID organizerId;
     private String organizerName;
     private boolean isOrganizer;
     private String name;

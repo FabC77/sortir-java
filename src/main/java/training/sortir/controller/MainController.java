@@ -39,7 +39,6 @@ public class MainController {
     @DeleteMapping("/users/{userId}/delete")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
         if (userService.deleteUser(userId)) {
-           // userService.logout(userId);
             return ResponseEntity.ok().body("Compte supprimé avec succès");
         } else {
 

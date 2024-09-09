@@ -21,8 +21,6 @@ MessageMapper INSTANCE = Mappers.getMapper(MessageMapper.class);
 
     @Mapping(source = "content", target = "content")
     @Mapping(source = "id", target = "id")
-    //@Mapping(source = "owner", target = "owner")
-    //@Mapping(source = "createdAt", target = "createdAt")// @Mapping(source = "createdAt", target = "createdAt", dateFormat = "yyyy-MM-dd HH:mm:ss")
     MessageDTO messageToDTO(Message message);
 
     List<MessageDTO> messagesToDTO(List<Message> messages);

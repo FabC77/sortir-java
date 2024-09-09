@@ -46,8 +46,6 @@ public class User implements UserDetails {
     @ManyToMany(mappedBy = "members")
     private List<Event> events = new ArrayList<>();
 
-   // private List<Event> createdEvents = new ArrayList<>();
-
     @JsonManagedReference("owner-messages")
     @OneToMany(mappedBy = "owner")
     private List<Message> messages = new ArrayList<>();
