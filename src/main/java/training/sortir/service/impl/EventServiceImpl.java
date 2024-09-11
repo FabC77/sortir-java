@@ -368,6 +368,10 @@ public class EventServiceImpl implements EventService {
                     event.setLastUpdated(now);
                     hasChanged = true;
                 }
+                if(event.getDeadline().before(now)){
+                    event.setStatus(EventStatus.CLOSED);
+                    hasChanged = true;
+                }
                 break;
             default:
                 break;
