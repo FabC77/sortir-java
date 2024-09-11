@@ -3,7 +3,6 @@ package training.sortir.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +20,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class MainController {
+public class DefaultController {
 
 
     private final MessageService messageService;
     private final UserService userService;
     private final MainService mainService;
 
-    /* USERS CRUD */
+    /* USERS CRUD - à refaire */
 
 
     @DeleteMapping("/users/{userId}/delete")
@@ -40,9 +39,12 @@ public class MainController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la suppression du compte");
         }
     }
+    @GetMapping("/users")
+    public List<UserDTO> getUsers() {
+        return userService.getUsers();
+    }
 
-
-    /* MESSAGE CRUD */
+    /* MESSAGE CRUD - Désactivé */
 
     @PostMapping("/messages/new")
     public ResponseEntity<?> addMessage(@RequestBody MessageDTO message, HttpServletRequest request) {
@@ -73,10 +75,7 @@ public class MainController {
         return messageService.getMessagesFromUser(userId);
     }
 
-    @GetMapping("/users")
-    public List<UserDTO> getUsers() {
-        return userService.getUsers();
-    }
+    /* DIVERS */
 
     @GetMapping("/campuses")
     public ResponseEntity<List<CampusDTO>> getCampuses() {

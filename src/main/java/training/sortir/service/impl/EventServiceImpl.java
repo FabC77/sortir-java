@@ -293,21 +293,22 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<SearchedEventDto> searchEvents(String username, SearchEventRequest req) {
+        String keyword= req.getKeyword().trim();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         List<SearchedEventDto> eventsDto = new ArrayList<>();
         List<Event> events = new ArrayList<>();
 
             if (req.getStartDate() != null && req.getEndDate() != null) {
-                events = eventRepository.findByStartDateBetweenAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getEndDate(), req.getCampusId(), req.getKeyword());
+                events = eventRepository.findByStartDateBetweenAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getEndDate(), req.getCampusId(), keyword);
             } else if (req.getEndDate() != null  ) {
-                events = eventRepository.findByStartDateBeforeAndCampusIdAndNameContainingIgnoreCase(req.getEndDate(), req.getCampusId(),req.getKeyword());
+                events = eventRepository.findByStartDateBeforeAndCampusIdAndNameContainingIgnoreCase(req.getEndDate(), req.getCampusId(),keyword);
 
             } else if (req.getStartDate() != null) {
-                events = eventRepository.findByStartDateAfterAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getCampusId(),req.getKeyword());
+                events = eventRepository.findByStartDateAfterAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getCampusId(),keyword);
 
             } else {
-                events = eventRepository.findByCampusIdAndNameContainingIgnoreCase(req.getCampusId(),req.getKeyword());
+                events = eventRepository.findByCampusIdAndNameContainingIgnoreCase(req.getCampusId(),keyword);
             }
 
         List<Event> filteredEvents=  events.stream().filter(event -> event.getStatus()!= EventStatus.ARCHIVED && event.getStatus()!= EventStatus.CANCELLED)

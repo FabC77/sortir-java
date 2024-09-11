@@ -21,7 +21,6 @@ public class MainServiceImpl implements MainService {
         List<Campus> campus = campusRepository.findAll();
         List<CampusDTO> dtos= new ArrayList<CampusDTO>();
         for (Campus cam : campus) {
-            System.out.println("Campus récupéré : "+cam.getName());
             CampusDTO dto= new CampusDTO();
             dto.setId(cam.getId());
             dto.setName(cam.getName());
