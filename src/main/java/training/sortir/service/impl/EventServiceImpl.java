@@ -105,6 +105,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventResponse update(UpdateEventRequest dto, long id, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
@@ -176,6 +177,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public List<MemberDto> joinEvent(long id, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
@@ -195,11 +197,12 @@ public class EventServiceImpl implements EventService {
         event.setCurrentMembers(event.getCurrentMembers() + 1);
         user.getEvents().add(event);
         eventRepository.save(event);
-        List<MemberDto> list = eventMapper.membersToDto(members);
-        return list;
+        userRepository.save(user);
+        return  eventMapper.membersToDto(members);
     }
 
     @Override
+    @Transactional
     public List<MemberDto> leaveEvent(long id, String username) {
 
         User user = userRepository.findByUsername(username)
@@ -207,15 +210,18 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow();
         if (user.getId().equals(event.getOrganizerId()))
             throw new IllegalStateException("The organizer can't leave his own event");
+        if (!event.getMembers().contains(user)) {
+            throw new IllegalStateException("User is not a member of this event");
+        }
 
         event.removeMember(user);
-        event.setCurrentMembers(event.getCurrentMembers() - 1);
-
+        if (event.getCurrentMembers() > 0) {
+            event.setCurrentMembers(event.getCurrentMembers() - 1);
+        }
         user.removeEvent(event);
         eventRepository.save(event);
-
-        List<MemberDto> list = eventMapper.membersToDto(event.getMembers());
-        return list;
+        userRepository.save(user);
+        return eventMapper.membersToDto(event.getMembers());
     }
 
     @Override
@@ -242,8 +248,6 @@ public class EventServiceImpl implements EventService {
             userEvents.add(response);
         }
         userEvents.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);
-
-
         return userEvents;
     }
 
@@ -267,7 +271,7 @@ public class EventServiceImpl implements EventService {
         if (event.getOrganizerId().equals(user.getId())) {
             dto.setCreator(true);
         }
-        if (event.getMembers().contains(user.getId())) {
+        if (event.getMembers().contains(user)) {
             dto.setEventMember(true);
         }
         dto.setDuration(event.getDuration().toHours() + "h" + (event.getDuration().toMinutes() % 60));

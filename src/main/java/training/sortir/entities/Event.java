@@ -44,7 +44,7 @@ public class Event {
     private int maxMembers;
     @NonNull
     private int currentMembers;
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "event_members",
             joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "member_id"))
     private List<User> members = new ArrayList<>();
