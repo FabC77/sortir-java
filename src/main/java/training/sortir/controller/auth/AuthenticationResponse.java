@@ -13,6 +13,6 @@ public class AuthenticationResponse {
 
     private String token;
     private String fullName;
-    private byte[] profilePicture;
+    private String profilePicture;
     private int campusId;
 }

@@ -13,7 +13,7 @@ public class MemberDto {
 
     private String firstname;
     private String lastname;
-    private byte[] picture;
+    private String profilePicture;
     private String username;
     private boolean isOrganizer;
 }

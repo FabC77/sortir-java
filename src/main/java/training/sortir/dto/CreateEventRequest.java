@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import training.sortir.entities.EventStatus;
 import training.sortir.entities.Location;
 import training.sortir.entities.User;
@@ -29,7 +30,7 @@ public class CreateEventRequest {
     @NotNull
     @NotBlank
     private boolean isDraft;
-    private byte[] picture;
+    private MultipartFile picture;
     private String locationId;
     private String locationName;
     private String locationNotNamed;

@@ -10,6 +10,7 @@ import training.sortir.dto.RegisterRequest;
 import training.sortir.entities.Role;
 import training.sortir.entities.User;
 import training.sortir.repository.UserRepository;
+import training.sortir.service.FileStoreService;
 import training.sortir.token.Token;
 import training.sortir.token.TokenRepository;
 import training.sortir.token.TokenType;
@@ -23,6 +24,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
+    private final FileStoreService fileStoreService;
 
     public AuthenticationResponse register(RegisterRequest request) {
         var user = User.builder()
@@ -34,10 +36,14 @@ public class AuthenticationService {
                 .campusId(request.getCampusId())
                 .role(Role.USER)
                 .IsActive(true)
-                .profilePicture(request.getProfilePicture())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
+        if(request.getProfilePicture() !=null){
+            fileStoreService.uploadProfilePicture(request.getProfilePicture(),user);
+        }
         var savedUser = repository.save(user);
+
+
         var jwtToken = jwtService.generateToken(user);
         saveUserToken(savedUser, jwtToken);
         return AuthenticationResponse.builder()
@@ -60,6 +66,7 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .campusId(user.getCampusId())
                 .fullName(user.getFirstname()+" "+user.getLastname())
+                .profilePicture(fileStoreService.getFullUrl(user.getProfilePicture()))
                 .build();
     }
 

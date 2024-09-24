@@ -32,4 +32,5 @@ public class UserEventResponse {
     private int maxMembers;
     private int currentMembers;
     private Date lastUpdated;
+    private String picture;
 }

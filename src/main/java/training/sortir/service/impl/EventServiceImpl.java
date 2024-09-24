@@ -3,12 +3,14 @@ package training.sortir.service.impl;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import training.sortir.dto.*;
 import training.sortir.entities.*;
 import training.sortir.repository.*;
 import training.sortir.service.EventService;
+import training.sortir.service.FileStoreService;
 import training.sortir.tools.EventMapper;
 
 import java.time.Duration;
@@ -22,12 +24,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
 
+    @Value("${aws.s3.baseurl}")
+    private String S3_URL;
+
     private final EventRepository eventRepository;
     private final LocationRepository locationRepository;
     private final CampusRepository campusRepository;
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
     private final CityRepository cityRepository;
+    private final FileStoreService fileStoreService;
 
 
     @Transactional
@@ -81,7 +87,6 @@ public class EventServiceImpl implements EventService {
                 .infos(dto.getInfos())
                 .organizerId(user.getId())
                 .status(dto.isDraft() ? EventStatus.DRAFT : EventStatus.OPEN)
-                .picture(dto.getPicture())
                 .location(location)
                 .campus(campus)
                 .startDate(dto.getStartDate())
@@ -93,6 +98,10 @@ public class EventServiceImpl implements EventService {
                 .deadline(dto.getDeadline())
                 .lastUpdated(new Date())
                 .build();
+
+        if (dto.getPicture() != null) {
+            fileStoreService.uploadEventPicture(dto.getPicture(), newEvent);
+        }
 
         newEvent.getMembers().add(user);
         user.getEvents().add(newEvent);
@@ -123,7 +132,9 @@ public class EventServiceImpl implements EventService {
         if (dto.getInfos() != null) event.setInfos(dto.getInfos());
         if (dto.getStatus() != null) event.setStatus(dto.getStatus());
         if (dto.getReason() != null) event.setReason(dto.getReason());
-        if (dto.getPicture() != null) event.setPicture(dto.getPicture());
+        if (dto.getPicture() != null) {
+            fileStoreService.uploadEventPicture(dto.getPicture(),event);
+        }
         if (dto.getLocationId() != null) {
             Location location = locationRepository.findById(dto.getLocationId())
                     .orElseThrow(() -> new EntityNotFoundException("Location not found with ID: " + dto.getLocationId()));
@@ -198,7 +209,7 @@ public class EventServiceImpl implements EventService {
         user.getEvents().add(event);
         eventRepository.save(event);
         userRepository.save(user);
-        return  eventMapper.membersToDto(members);
+        return eventMapper.membersToDto(members, fileStoreService);
     }
 
     @Override
@@ -221,7 +232,7 @@ public class EventServiceImpl implements EventService {
         user.removeEvent(event);
         eventRepository.save(event);
         userRepository.save(user);
-        return eventMapper.membersToDto(event.getMembers());
+        return eventMapper.membersToDto(event.getMembers(), fileStoreService);
     }
 
     @Override
@@ -237,6 +248,9 @@ public class EventServiceImpl implements EventService {
                 eventRepository.save(event);
             }
             response = eventMapper.eventToUserEventResponse(event);
+            if(event.getPicture()!=null){
+                response.setPicture(S3_URL+event.getPicture());
+            }
             if (event.getOrganizerId().equals(user.getId())) {
                 response.setOrganizerName("Vous");
                 response.setOrganizer(true);
@@ -268,6 +282,11 @@ public class EventServiceImpl implements EventService {
         dto.setCampusName(event.getCampus().getName());
         dto.setCampusId(event.getCampus().getId());
         dto.setAddress(event.getLocation().getAddress());
+        if(event.getPicture()!=null){
+            dto.setPicture(S3_URL+event.getPicture());
+        }
+        dto.setMembers(eventMapper.membersToDto(event.getMembers(),fileStoreService));
+
         if (event.getOrganizerId().equals(user.getId())) {
             dto.setCreator(true);
         }
@@ -290,6 +309,9 @@ public class EventServiceImpl implements EventService {
             User org = userRepository.findById(campEvent.getOrganizerId()).orElseThrow();
             e.setOrganizerName(org.getFirstname() + " " + org.getLastname());
             e.setLocationName(campEvent.getLocation().getName());
+            if(campEvent.getPicture()!=null){
+                e.setPicture(S3_URL+campEvent.getPicture());
+            }
             events.add(e);
         }
         return events;
@@ -297,30 +319,33 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<SearchedEventDto> searchEvents(String username, SearchEventRequest req) {
-        String keyword= req.getKeyword().trim();
+        String keyword = req.getKeyword().trim();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         List<SearchedEventDto> eventsDto = new ArrayList<>();
         List<Event> events = new ArrayList<>();
 
-            if (req.getStartDate() != null && req.getEndDate() != null) {
-                events = eventRepository.findByStartDateBetweenAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getEndDate(), req.getCampusId(), keyword);
-            } else if (req.getEndDate() != null  ) {
-                events = eventRepository.findByStartDateBeforeAndCampusIdAndNameContainingIgnoreCase(req.getEndDate(), req.getCampusId(),keyword);
+        if (req.getStartDate() != null && req.getEndDate() != null) {
+            events = eventRepository.findByStartDateBetweenAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getEndDate(), req.getCampusId(), keyword);
+        } else if (req.getEndDate() != null) {
+            events = eventRepository.findByStartDateBeforeAndCampusIdAndNameContainingIgnoreCase(req.getEndDate(), req.getCampusId(), keyword);
 
-            } else if (req.getStartDate() != null) {
-                events = eventRepository.findByStartDateAfterAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getCampusId(),keyword);
+        } else if (req.getStartDate() != null) {
+            events = eventRepository.findByStartDateAfterAndCampusIdAndNameContainingIgnoreCase(req.getStartDate(), req.getCampusId(), keyword);
 
-            } else {
-                events = eventRepository.findByCampusIdAndNameContainingIgnoreCase(req.getCampusId(),keyword);
-            }
+        } else {
+            events = eventRepository.findByCampusIdAndNameContainingIgnoreCase(req.getCampusId(), keyword);
+        }
 
-        List<Event> filteredEvents=  events.stream().filter(event -> event.getStatus()!= EventStatus.ARCHIVED && event.getStatus()!= EventStatus.CANCELLED)
+        List<Event> filteredEvents = events.stream().filter(event -> event.getStatus() != EventStatus.ARCHIVED && event.getStatus() != EventStatus.CANCELLED)
                 .toList();
         for (Event event : filteredEvents) {
             SearchedEventDto s = new SearchedEventDto();
             s = eventMapper.searchedEventToDto(event);
             User org = userRepository.findById(event.getOrganizerId()).orElseThrow();
+            if(event.getPicture()!=null){
+                s.setPicture(S3_URL+event.getPicture());
+            }
             s.setOrganizerName(org.getFirstname() + " " + org.getLastname());
             s.setLocationName(event.getLocation().getName());
             s.setCampusId(event.getCampus().getId());
@@ -372,7 +397,7 @@ public class EventServiceImpl implements EventService {
                     event.setLastUpdated(now);
                     hasChanged = true;
                 }
-                if(event.getDeadline().before(now)){
+                if (event.getDeadline().before(now)) {
                     event.setStatus(EventStatus.CLOSED);
                     hasChanged = true;
                 }

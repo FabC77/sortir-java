@@ -27,5 +27,6 @@ public class SearchedEventDto {
     private int maxMembers;
     private int currentMembers;
     private Date lastUpdated;
+    private String picture;
 
 }

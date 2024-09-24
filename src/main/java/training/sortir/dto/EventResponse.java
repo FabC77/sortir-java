@@ -28,7 +28,7 @@ public class EventResponse {
     private String name;
     private String infos;
     private String reason;
-    private byte[] picture;
+    private String picture;
     private String locationId;
     private String locationName;
     private String address;

@@ -38,7 +38,7 @@ public class User implements UserDetails {
     private boolean IsAdmin;
     private boolean IsActive = true;
     private int campusId;
-    private byte[] profilePicture;
+    private String profilePicture;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;

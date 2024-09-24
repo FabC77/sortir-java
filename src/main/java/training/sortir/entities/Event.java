@@ -29,7 +29,7 @@ public class Event {
     private String name;
     private String infos;
     private String reason;
-    private byte[] picture;
+    private String picture;
     @JsonBackReference("location-events")
     @ManyToOne
     private Location location;

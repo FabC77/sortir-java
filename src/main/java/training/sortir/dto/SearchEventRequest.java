@@ -19,4 +19,5 @@ public class SearchEventRequest {
     private Date endDate;
     private boolean full;
 
+
 }

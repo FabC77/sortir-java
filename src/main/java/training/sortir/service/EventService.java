@@ -1,9 +1,11 @@
 package training.sortir.service;
 
+import org.springframework.stereotype.Service;
 import training.sortir.dto.*;
 
 import java.util.List;
 
+@Service
 public interface EventService {
     EventResponse register(CreateEventRequest event, String username);
 

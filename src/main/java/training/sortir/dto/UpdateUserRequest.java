@@ -2,6 +2,7 @@ package training.sortir.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
@@ -19,5 +20,5 @@ public class UpdateUserRequest {
     private String newPassword;
     private String confirmPassword;
     private int campusId;
-    private byte[] profilePicture;
+    private MultipartFile profilePicture;
 }

@@ -12,6 +12,7 @@ import training.sortir.entities.Campus;
 import training.sortir.entities.User;
 import training.sortir.repository.CampusRepository;
 import training.sortir.repository.UserRepository;
+import training.sortir.service.FileStoreService;
 import training.sortir.service.UserService;
 import training.sortir.tools.UserMapper;
 
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CampusRepository campusRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileStoreService fileStoreService;
 
     @Override
     public boolean login(UserDTO userDTO) {
@@ -45,7 +47,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean deleteUser(UUID userId) {
         if (userRepository.existsById(userId)) {
+            User user = userRepository.findById(userId).get();
+            fileStoreService.deleteProfilePicture(user);
             userRepository.deleteById(userId);
+
             return true;
         } else {
             throw new RuntimeException("L'utilisateur avec l'ID " + userId + " n'existe pas.");
@@ -107,8 +112,8 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new EntityNotFoundException("Campus not found"));
             user.setCampusId(campus.getId());
         }
-        if (dto.getProfilePicture() != null && dto.getProfilePicture().length > 0) {
-            user.setProfilePicture(dto.getProfilePicture());
+        if (dto.getProfilePicture() != null) {
+          fileStoreService.uploadProfilePicture(dto.getProfilePicture(), user);
         }
         userRepository.save(user);
 

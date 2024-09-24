@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -35,5 +36,5 @@ public class RegisterRequest {
     private String phoneNumber;
     @NotNull(message = "CampusId is null")
     private int campusId;
-    private byte[] profilePicture;
+    private MultipartFile profilePicture;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import training.sortir.entities.EventStatus;
 
 import java.time.Duration;
@@ -21,7 +22,7 @@ public class UpdateEventRequest {
     private String name;
     private String infos;
     private String reason;
-    private byte[] picture;
+    private MultipartFile picture;
     private String locationId;
     private String locationName;
     private Date startDate;
