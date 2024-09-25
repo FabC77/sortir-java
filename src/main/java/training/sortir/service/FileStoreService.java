@@ -5,6 +5,8 @@ import org.springframework.web.multipart.MultipartFile;
 import training.sortir.entities.Event;
 import training.sortir.entities.User;
 
+import java.io.FileNotFoundException;
+
 @Service
 public interface FileStoreService {
 
@@ -20,5 +22,6 @@ public interface FileStoreService {
     String getFullUrl(String pictureName);
 
     String uploadFile(MultipartFile data, String username);
+    void cancelUpload(String filename, String username) throws FileNotFoundException;
 
 }

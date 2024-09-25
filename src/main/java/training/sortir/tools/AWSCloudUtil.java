@@ -74,9 +74,11 @@ public class AWSCloudUtil {
             DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(AWS_BUCKET, filename);
             s3client.deleteObject(deleteObjectRequest);
             System.out.println("File deleted successfully: " + filename);
-        } catch (Exception e) {
+        } catch (AmazonServiceException e) {
             e.printStackTrace();
-            System.out.println("Error deleting file: " + filename);
+            throw e;
+
         }
     }
+
 }

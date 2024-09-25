@@ -1,5 +1,6 @@
 package training.sortir.service.impl;
 
+import com.amazonaws.AmazonServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +16,8 @@ import training.sortir.repository.EventRepository;
 import training.sortir.repository.UserRepository;
 import training.sortir.service.FileStoreService;
 
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Service
@@ -91,9 +94,23 @@ public class FileStoreServiceImpl implements FileStoreService {
     public String uploadFile(MultipartFile file, String username) throws FileUploadException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
-        uploadFileToS3(file);
+      String response=  uploadFileToS3(file);
 
-        return file.getOriginalFilename();
+        return response;
+    }
+
+    @Override
+    public void cancelUpload(String filename, String username) throws FileNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
+
+        try {
+            AWSCloudUtil util = new AWSCloudUtil();
+            util.deleteFileFromS3("temp-files/" + filename);
+        } catch (AmazonServiceException e) {
+            throw new FileUploadException("Failed to delete file from S3: " + e.getMessage());
+        }
+
     }
 
 
