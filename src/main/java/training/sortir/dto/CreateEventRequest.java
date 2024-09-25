@@ -30,7 +30,7 @@ public class CreateEventRequest {
     @NotNull
     @NotBlank
     private boolean isDraft;
-    private MultipartFile picture;
+    private String picture;
     private String locationId;
     private String locationName;
     private String locationNotNamed;

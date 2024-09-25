@@ -22,7 +22,7 @@ public class UpdateEventRequest {
     private String name;
     private String infos;
     private String reason;
-    private MultipartFile picture;
+    private String picture;
     private String locationId;
     private String locationName;
     private Date startDate;

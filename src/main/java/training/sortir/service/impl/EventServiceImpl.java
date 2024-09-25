@@ -15,10 +15,7 @@ import training.sortir.tools.EventMapper;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,7 +97,7 @@ public class EventServiceImpl implements EventService {
                 .build();
 
         if (dto.getPicture() != null) {
-            fileStoreService.uploadEventPicture(dto.getPicture(), newEvent);
+            fileStoreService.confirmEventPicture(dto.getPicture(), newEvent);
         }
 
         newEvent.getMembers().add(user);
@@ -133,7 +130,7 @@ public class EventServiceImpl implements EventService {
         if (dto.getStatus() != null) event.setStatus(dto.getStatus());
         if (dto.getReason() != null) event.setReason(dto.getReason());
         if (dto.getPicture() != null) {
-            fileStoreService.uploadEventPicture(dto.getPicture(),event);
+            fileStoreService.confirmEventPicture(dto.getPicture(),event);
         }
         if (dto.getLocationId() != null) {
             Location location = locationRepository.findById(dto.getLocationId())
@@ -383,12 +380,14 @@ public class EventServiceImpl implements EventService {
             case CANCELLED:
                 if (new Date().after(event.getArchiveDate())) {
                     event.setStatus(EventStatus.ARCHIVED);
+                    fileStoreService.deleteEventPicture(event);
                     hasChanged = true;
                 }
                 break;
             case FINISHED:
                 if (now.after(event.getArchiveDate())) {
                     event.setStatus(EventStatus.ARCHIVED);
+                    fileStoreService.deleteEventPicture(event);
                 }
                 break;
             case OPEN:

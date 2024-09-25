@@ -2,13 +2,15 @@ package training.sortir.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import training.sortir.config.AWSCloudUtil;
+import training.sortir.tools.AWSCloudUtil;
 import training.sortir.entities.Event;
 import training.sortir.entities.User;
+import training.sortir.exception.FileUploadException;
 import training.sortir.repository.EventRepository;
 import training.sortir.repository.UserRepository;
 import training.sortir.service.FileStoreService;
@@ -26,56 +28,45 @@ public class FileStoreServiceImpl implements FileStoreService {
     private final EventRepository eventRepository;
 
 
-    private boolean uploadFileToS3(MultipartFile data) {
+    private String uploadFileToS3(MultipartFile data) {
         try {
-
             AWSCloudUtil util = new AWSCloudUtil();
-            //vérifier si un fichier est lié
-            //vérifier s'il est déjà uploader
-            //supprimer le fichier 1 avant d'ernegistrer le fichier 2.
-            util.uploadFileToS3(data.getOriginalFilename(), data.getBytes() );
-
-            return true;
+            util.uploadFileToS3(data.getOriginalFilename(), data.getBytes());
+            return String.format("File %s uploaded successfully.", data.getOriginalFilename());
         } catch (IOException e) {
             e.printStackTrace();
+            return String.format("File %s upload failed.", data.getOriginalFilename());
         }
-        return false;
+
     }
 
     public void deleteFileFromS3(String filename) {
 
-            AWSCloudUtil util = new AWSCloudUtil();
-            util.deleteFileFromS3(filename );
+        AWSCloudUtil util = new AWSCloudUtil();
+        util.deleteFileFromS3(filename);
 
     }
 
 
     @Override
     @Transactional
-    public String uploadProfilePicture(MultipartFile data, User user) {
+    public void confirmProfilePicture(String filename, User user) {
         if (user.getProfilePicture() != null) {
             deleteFileFromS3(user.getProfilePicture());
         }
-
-        if (uploadFileToS3(data)) {
-            user.setProfilePicture(data.getOriginalFilename());
-
-            return String.format("File %s uploaded successfully.", data.getOriginalFilename());
-        }
-        return String.format("File %s upload failed.", data.getOriginalFilename());
-
+        AWSCloudUtil util = new AWSCloudUtil();
+        util.confirmFile(filename, "profile-picture/");
 
     }
 
     @Override
-    public String uploadEventPicture(MultipartFile data, Event event) {
-
-        if (uploadFileToS3(data)) {
-            event.setPicture(data.getOriginalFilename());
-
-            return String.format("File %s uploaded successfully.", data.getOriginalFilename());
+    public void confirmEventPicture(String filename, Event event) {
+        if (event.getPicture() != null) {
+            deleteFileFromS3(event.getPicture());
         }
-        return String.format("File %s upload failed.", data.getOriginalFilename());
+        AWSCloudUtil util = new AWSCloudUtil();
+        util.confirmFile(filename, "event-picture/");
+
 
     }
 
@@ -93,7 +84,17 @@ public class FileStoreServiceImpl implements FileStoreService {
 
     @Override
     public String getFullUrl(String pictureName) {
-        return S3_URL+pictureName;
+        return S3_URL + pictureName;
     }
+
+    @Override
+    public String uploadFile(MultipartFile file, String username) throws FileUploadException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
+        uploadFileToS3(file);
+
+        return file.getOriginalFilename();
+    }
+
 
 }

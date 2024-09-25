@@ -39,7 +39,7 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
         if(request.getProfilePicture() !=null){
-            fileStoreService.uploadProfilePicture(request.getProfilePicture(),user);
+            fileStoreService.confirmProfilePicture(request.getProfilePicture(),user);
         }
         var savedUser = repository.save(user);
 

@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
             user.setCampusId(campus.getId());
         }
         if (dto.getProfilePicture() != null) {
-          fileStoreService.uploadProfilePicture(dto.getProfilePicture(), user);
+          fileStoreService.confirmProfilePicture(dto.getProfilePicture(), user);
         }
         userRepository.save(user);
 

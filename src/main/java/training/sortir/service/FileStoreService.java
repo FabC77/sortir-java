@@ -9,14 +9,16 @@ import training.sortir.entities.User;
 public interface FileStoreService {
 
 
-    String uploadProfilePicture(MultipartFile data, User user);
+    void confirmProfilePicture(String filename, User user);
 
-    String uploadEventPicture(MultipartFile data, Event event);
+    void confirmEventPicture(String filename, Event event);
 
     boolean deleteProfilePicture( User user);
 
     boolean deleteEventPicture(Event event);
 
     String getFullUrl(String pictureName);
+
+    String uploadFile(MultipartFile data, String username);
 
 }

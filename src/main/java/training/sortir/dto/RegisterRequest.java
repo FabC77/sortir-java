@@ -36,5 +36,5 @@ public class RegisterRequest {
     private String phoneNumber;
     @NotNull(message = "CampusId is null")
     private int campusId;
-    private MultipartFile profilePicture;
+    private String profilePicture;
 }

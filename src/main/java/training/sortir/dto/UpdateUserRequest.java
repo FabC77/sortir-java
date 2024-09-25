@@ -20,5 +20,5 @@ public class UpdateUserRequest {
     private String newPassword;
     private String confirmPassword;
     private int campusId;
-    private MultipartFile profilePicture;
+    private String profilePicture;
 }
