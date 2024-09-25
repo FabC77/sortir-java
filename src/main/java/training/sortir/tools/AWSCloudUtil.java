@@ -1,16 +1,16 @@
 package training.sortir.tools;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+
 import org.springframework.beans.factory.annotation.Value;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.*;
 
@@ -25,59 +25,84 @@ public class AWSCloudUtil {
     @Value("${aws.s3.baseurl}")
     private String S3_URL;
 
-    private AWSCredentials awsCredentials() {
-        AWSCredentials credentials = new BasicAWSCredentials(AWS_ACCESS_KEY,AWS_SECRET_KEY);
-        return credentials;
+    private StaticCredentialsProvider awsCredentialsProvider() {
+        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+        return StaticCredentialsProvider.create(awsCreds);
     }
 
-    private AmazonS3 awsS3ClientBuilder() {
-        AmazonS3 s3Client = AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials()))
-                .withRegion(Regions.EU_WEST_3)
+    private S3Client awsS3ClientBuilder() {
+        return S3Client.builder()
+                .credentialsProvider(awsCredentialsProvider())
+                .region(Region.EU_WEST_3)
                 .build();
-        return s3Client;
     }
-    public void uploadFileToS3(String name, byte[] fileBytes){
-        AmazonS3 s3client = awsS3ClientBuilder();
-        String filename = "temp-files/"+name;
-        File file = new File(filename);
+    /////////:
 
-        try(OutputStream os = new FileOutputStream(file)){
-            os.write(fileBytes);
-        } catch (FileNotFoundException e){
-            e.printStackTrace();
-        }catch (IOException e){
-            e.printStackTrace();
+
+    public void uploadFileToS3(String name, byte[] fileBytes){
+        S3Client s3Client = awsS3ClientBuilder();
+
+        String filename = "temp-files/"+name;
+        try {
+            s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(AWS_BUCKET)
+                            .key(filename)
+                            .build(),
+                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(fileBytes)
+            );
+            System.out.println("File uploaded successfully: " + filename);
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            throw e;
         }
-        s3client.putObject(AWS_BUCKET,filename,file);
     }
     public void confirmFile(String filename, String path) {
+        S3Client s3Client = awsS3ClientBuilder();
+        String oldPath = "temp-files/" + filename;
+        String newPath = path + filename;
+
         try {
-            AmazonS3 s3client = awsS3ClientBuilder();
-            String oldPath = "temp-files/" + filename;
-            String newPath = path+filename;
-            s3client.copyObject(AWS_BUCKET, oldPath, AWS_BUCKET, newPath);
-        } catch (AmazonServiceException e) {
-            System.out.println(e.getMessage());
+            s3Client.copyObject(CopyObjectRequest.builder()
+                    .sourceBucket(AWS_BUCKET)
+                    .sourceKey(oldPath)
+                    .destinationBucket(AWS_BUCKET)
+                    .destinationKey(newPath)
+                    .build()
+            );
+            System.out.println("File moved successfully: " + newPath);
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            throw e;
         }
     }
-    public S3ObjectInputStream downloadFileFromS3(String filename ){
-        AmazonS3 s3client = awsS3ClientBuilder();
-        S3Object s3object= s3client.getObject(AWS_BUCKET,filename);
-        S3ObjectInputStream inputStream = s3object.getObjectContent();
-        return inputStream;
-    }
-    public void deleteFileFromS3(String filename){
-        AmazonS3 s3client = awsS3ClientBuilder();
-        try {
-            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(AWS_BUCKET, filename);
-            s3client.deleteObject(deleteObjectRequest);
-            System.out.println("File deleted successfully: " + filename);
-        } catch (AmazonServiceException e) {
-            e.printStackTrace();
-            throw e;
 
+    public InputStream downloadFileFromS3(String filename) {
+        S3Client s3Client = awsS3ClientBuilder();
+        try {
+            ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(AWS_BUCKET)
+                    .key(filename)
+                    .build());
+
+            return s3Object;
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            throw e;
+        }
+    }
+
+    public void deleteFileFromS3(String filename){
+        S3Client s3Client = awsS3ClientBuilder();
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(AWS_BUCKET)
+                    .key(filename)
+                    .build()
+            );
+            System.out.println("File deleted successfully: " + filename);
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            throw e;
         }
     }
 

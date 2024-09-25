@@ -23,7 +23,7 @@ public class FileController {
     private final FileStoreService fileService;
 
     @PostMapping("/file/upload")
-    public ResponseEntity<String> upload(@RequestBody MultipartFile file, Principal principal) {
+    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file, Principal principal) {
         String username = principal.getName();
         try {
             String fileName = fileService.uploadFile(file, username);

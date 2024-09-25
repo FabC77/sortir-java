@@ -1,6 +1,6 @@
 package training.sortir.service.impl;
 
-import com.amazonaws.AmazonServiceException;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import training.sortir.tools.AWSCloudUtil;
 import training.sortir.entities.Event;
 import training.sortir.entities.User;
@@ -19,6 +20,7 @@ import training.sortir.service.FileStoreService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,14 +35,24 @@ public class FileStoreServiceImpl implements FileStoreService {
 
     private String uploadFileToS3(MultipartFile data) {
         try {
+            String fileName = data.getOriginalFilename();
+            fileName = generateUniqueFileName(fileName);
+
             AWSCloudUtil util = new AWSCloudUtil();
-            util.uploadFileToS3(data.getOriginalFilename(), data.getBytes());
-            return String.format("File %s uploaded successfully.", data.getOriginalFilename());
+            util.uploadFileToS3(fileName, data.getBytes());
+            return fileName;
         } catch (IOException e) {
             e.printStackTrace();
             return String.format("File %s upload failed.", data.getOriginalFilename());
         }
 
+    }
+
+    private String generateUniqueFileName(String originalFilename) {
+        String nameWithoutExtension = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String uniqueName = nameWithoutExtension + "-" + UUID.randomUUID().toString().substring(0, 8) + extension;
+        return uniqueName;
     }
 
     public void deleteFileFromS3(String filename) {
@@ -94,7 +106,7 @@ public class FileStoreServiceImpl implements FileStoreService {
     public String uploadFile(MultipartFile file, String username) throws FileUploadException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
-      String response=  uploadFileToS3(file);
+        String response = uploadFileToS3(file);
 
         return response;
     }
@@ -107,7 +119,7 @@ public class FileStoreServiceImpl implements FileStoreService {
         try {
             AWSCloudUtil util = new AWSCloudUtil();
             util.deleteFileFromS3("temp-files/" + filename);
-        } catch (AmazonServiceException e) {
+        } catch (AwsServiceException e) {
             throw new FileUploadException("Failed to delete file from S3: " + e.getMessage());
         }
 
