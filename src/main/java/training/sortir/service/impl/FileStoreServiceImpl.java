@@ -37,9 +37,10 @@ public class FileStoreServiceImpl implements FileStoreService {
         try {
             String fileName = data.getOriginalFilename();
             fileName = generateUniqueFileName(fileName);
-
+            System.out.println("AFTER RENAMED FILE : "+fileName);
             AWSCloudUtil util = new AWSCloudUtil();
             util.uploadFileToS3(fileName, data.getBytes());
+            System.out.println("AFTER util.uploadFileToS3");
             return fileName;
         } catch (IOException e) {
             e.printStackTrace();
@@ -71,7 +72,7 @@ public class FileStoreServiceImpl implements FileStoreService {
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "profile-picture/");
-
+user.setProfilePicture("profile-picture/"+filename);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class FileStoreServiceImpl implements FileStoreService {
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "event-picture/");
-
+event.setPicture("event-picture/"+filename);
 
     }
 
@@ -104,10 +105,12 @@ public class FileStoreServiceImpl implements FileStoreService {
 
     @Override
     public String uploadFile(MultipartFile file, String username) throws FileUploadException {
+        System.out.println("IN UPLOAD FILE \n");
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
+        System.out.println("AFTER USER CHECK \n");
         String response = uploadFileToS3(file);
-
+        System.out.println("AFTER uploadFileToS3 method \n");
         return response;
     }
 

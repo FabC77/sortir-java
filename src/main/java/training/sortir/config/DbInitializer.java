@@ -28,7 +28,7 @@ private final PasswordEncoder passwordEncoder;
             User[] users = new User[]{
                     new User("fab",
                             "Fabien",
-                            "C",
+                            "Testou",
                             "fab@gmail.com",
                             passwordEncoder.encode("1234"),
                             1

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import training.sortir.dto.CreateEventRequest;
 import training.sortir.dto.EventResponse;
@@ -24,10 +25,14 @@ public class FileController {
 
     @PostMapping("/file/upload")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file, Principal principal) {
+        System.out.printf("INSIDE UPLOAD CONTROLLER - START"+"\n");
+        System.out.println(file.getOriginalFilename());
         String username = principal.getName();
         try {
             String fileName = fileService.uploadFile(file, username);
             return ResponseEntity.status(HttpStatus.CREATED).body(fileName);
+        } catch (MaxUploadSizeExceededException e) {
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e.getMessage());
         } catch (FileUploadException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {

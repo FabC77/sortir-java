@@ -9,8 +9,8 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-
 import software.amazon.awssdk.services.s3.model.*;
+
 
 import java.io.*;
 
@@ -25,23 +25,24 @@ public class AWSCloudUtil {
     @Value("${aws.s3.baseurl}")
     private String S3_URL;
 
-    private StaticCredentialsProvider awsCredentialsProvider() {
-        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(AWS_ACCESS_KEY, AWS_SECRET_KEY);
-        return StaticCredentialsProvider.create(awsCreds);
+    private AwsCredentials awsCredentialsProvider() {
+        return AwsBasicCredentials.create(AWS_ACCESS_KEY,AWS_SECRET_KEY);
     }
 
     private S3Client awsS3ClientBuilder() {
         return S3Client.builder()
-                .credentialsProvider(awsCredentialsProvider())
+                .credentialsProvider(StaticCredentialsProvider.create(awsCredentialsProvider()))
                 .region(Region.EU_WEST_3)
                 .build();
     }
-    /////////:
 
 
     public void uploadFileToS3(String name, byte[] fileBytes){
-        S3Client s3Client = awsS3ClientBuilder();
+        System.out.println("AWSCLOUDUTIL - uploadFile START");
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
 
+        S3Client s3Client = awsS3ClientBuilder();
+        System.out.println("AWSCLOUDUTIL - init client");
         String filename = "temp-files/"+name;
         try {
             s3Client.putObject(PutObjectRequest.builder()
