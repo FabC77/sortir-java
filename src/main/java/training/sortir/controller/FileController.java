@@ -30,6 +30,8 @@ public class FileController {
         String username = principal.getName();
         try {
             String fileName = fileService.uploadFile(file, username);
+            System.out.printf("INSIDE UPLOAD CONTROLLER - AFTER SUCCESS // filname= "+fileName+"\n");
+
             return ResponseEntity.status(HttpStatus.CREATED).body(fileName);
         } catch (MaxUploadSizeExceededException e) {
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e.getMessage());
