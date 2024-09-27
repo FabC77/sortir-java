@@ -19,7 +19,7 @@ public interface FileStoreService {
 
     boolean deleteEventPicture(Event event);
 
-    String getFullUrl(String pictureName);
+
 
     String uploadFile(MultipartFile data, String username);
     void cancelUpload(String filename, String username) throws FileNotFoundException;

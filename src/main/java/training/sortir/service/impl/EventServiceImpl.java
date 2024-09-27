@@ -246,7 +246,7 @@ public class EventServiceImpl implements EventService {
             }
             response = eventMapper.eventToUserEventResponse(event);
             if(event.getPicture()!=null){
-                response.setPicture(S3_URL+event.getPicture());
+                response.setPicture(event.getPicture());
             }
             if (event.getOrganizerId().equals(user.getId())) {
                 response.setOrganizerName("Vous");
@@ -280,7 +280,7 @@ public class EventServiceImpl implements EventService {
         dto.setCampusId(event.getCampus().getId());
         dto.setAddress(event.getLocation().getAddress());
         if(event.getPicture()!=null){
-            dto.setPicture(S3_URL+event.getPicture());
+            dto.setPicture(event.getPicture());
         }
         dto.setMembers(eventMapper.membersToDto(event.getMembers(),fileStoreService));
 
@@ -307,7 +307,7 @@ public class EventServiceImpl implements EventService {
             e.setOrganizerName(org.getFirstname() + " " + org.getLastname());
             e.setLocationName(campEvent.getLocation().getName());
             if(campEvent.getPicture()!=null){
-                e.setPicture(S3_URL+campEvent.getPicture());
+                e.setPicture(campEvent.getPicture());
             }
             events.add(e);
         }
@@ -341,7 +341,7 @@ public class EventServiceImpl implements EventService {
             s = eventMapper.searchedEventToDto(event);
             User org = userRepository.findById(event.getOrganizerId()).orElseThrow();
             if(event.getPicture()!=null){
-                s.setPicture(S3_URL+event.getPicture());
+                s.setPicture(event.getPicture());
             }
             s.setOrganizerName(org.getFirstname() + " " + org.getLastname());
             s.setLocationName(event.getLocation().getName());

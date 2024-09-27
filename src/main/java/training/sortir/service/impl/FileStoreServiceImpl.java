@@ -4,6 +4,7 @@ package training.sortir.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,7 @@ import training.sortir.repository.UserRepository;
 import training.sortir.service.FileStoreService;
 
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.UUID;
 
 @Service
@@ -39,13 +39,34 @@ public class FileStoreServiceImpl implements FileStoreService {
             fileName = generateUniqueFileName(fileName);
             System.out.println("AFTER RENAMED FILE : "+fileName);
             AWSCloudUtil util = new AWSCloudUtil();
-            util.uploadFileToS3(fileName, data.getBytes());
+            compressImage(fileName,util, data);
             System.out.println("AFTER util.uploadFileToS3");
             return fileName;
         } catch (IOException e) {
             e.printStackTrace();
             return String.format("File %s upload failed.", data.getOriginalFilename());
         }
+
+    }
+
+    private void compressImage(String fileName,AWSCloudUtil util, MultipartFile data) throws IOException {
+        byte[] originalData = data.getBytes();
+
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Thumbnails.of(new ByteArrayInputStream(originalData))
+                .size(1000, 1000)
+                .outputQuality(0.75)
+                .toOutputStream(outputStream);
+        util.uploadFileToS3(fileName, outputStream.toByteArray());
+
+
+        ByteArrayOutputStream small = new ByteArrayOutputStream();
+        Thumbnails.of(new ByteArrayInputStream(originalData))
+                .size(325, 325)
+                .outputQuality(0.75)
+                .toOutputStream(small);
+        util.uploadFileToS3("small/" + fileName, small.toByteArray());
 
     }
 
@@ -72,7 +93,8 @@ public class FileStoreServiceImpl implements FileStoreService {
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "profile-picture/");
-user.setProfilePicture("profile-picture/"+filename);
+        util.confirmFile("small/"+filename, "profile-picture/small/");
+user.setProfilePicture(filename);
     }
 
     @Override
@@ -82,7 +104,8 @@ user.setProfilePicture("profile-picture/"+filename);
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "event-picture/");
-event.setPicture("event-picture/"+filename);
+        util.confirmFile("small/"+filename, "event-picture/small/");
+event.setPicture(filename);
 
     }
 
@@ -98,10 +121,7 @@ event.setPicture("event-picture/"+filename);
         return false;
     }
 
-    @Override
-    public String getFullUrl(String pictureName) {
-        return S3_URL + pictureName;
-    }
+
 
     @Override
     public String uploadFile(MultipartFile file, String username) throws FileUploadException {

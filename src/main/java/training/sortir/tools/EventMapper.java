@@ -17,7 +17,7 @@ public interface EventMapper {
 
 
 
-    @Mapping(target = "profilePicture", expression = "java(fileStoreService.getFullUrl(user.getProfilePicture()))")
+    //@Mapping(target = "profilePicture", expression = "java(fileStoreService.getFullUrl(user.getProfilePicture()))")
     MemberDto userToMemberDto(User user, @Context FileStoreService fileStoreService);
 
     List<MemberDto> membersToDto(List<User> users, @Context FileStoreService fileStoreService);

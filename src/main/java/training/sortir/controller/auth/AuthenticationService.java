@@ -66,7 +66,7 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .campusId(user.getCampusId())
                 .fullName(user.getFirstname()+" "+user.getLastname())
-                .profilePicture(fileStoreService.getFullUrl(user.getProfilePicture()))
+                .profilePicture(user.getProfilePicture())
                 .build();
     }
 
