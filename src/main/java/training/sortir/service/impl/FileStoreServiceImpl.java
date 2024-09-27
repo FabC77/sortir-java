@@ -56,7 +56,8 @@ public class FileStoreServiceImpl implements FileStoreService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Thumbnails.of(new ByteArrayInputStream(originalData))
                 .size(1000, 1000)
-                .outputQuality(0.75)
+                .outputQuality(0.40)
+                .outputFormat("jpg")
                 .toOutputStream(outputStream);
         util.uploadFileToS3(fileName, outputStream.toByteArray());
 
@@ -64,7 +65,8 @@ public class FileStoreServiceImpl implements FileStoreService {
         ByteArrayOutputStream small = new ByteArrayOutputStream();
         Thumbnails.of(new ByteArrayInputStream(originalData))
                 .size(325, 325)
-                .outputQuality(0.75)
+                .outputQuality(0.40)
+                .outputFormat("jpg")
                 .toOutputStream(small);
         util.uploadFileToS3("small/" + fileName, small.toByteArray());
 
@@ -93,7 +95,7 @@ public class FileStoreServiceImpl implements FileStoreService {
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "profile-picture/");
-        util.confirmFile("small/"+filename, "profile-picture/small/");
+        util.confirmSmallFile(filename, "profile-picture/small/");
 user.setProfilePicture(filename);
     }
 
@@ -104,7 +106,7 @@ user.setProfilePicture(filename);
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "event-picture/");
-        util.confirmFile("small/"+filename, "event-picture/small/");
+        util.confirmSmallFile(filename, "event-picture/small/");
 event.setPicture(filename);
 
     }

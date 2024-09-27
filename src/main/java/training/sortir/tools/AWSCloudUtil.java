@@ -96,6 +96,25 @@ public class AWSCloudUtil {
             throw e;
         }
     }
+    public void confirmSmallFile(String filename, String path) {
+        S3Client s3Client = awsS3ClientBuilder();
+        String oldPath = "temp-files/small/" + filename;
+        String newPath = path + filename;
+
+        try {
+            s3Client.copyObject(CopyObjectRequest.builder()
+                    .sourceBucket(AWS_BUCKET)
+                    .sourceKey(oldPath)
+                    .destinationBucket(AWS_BUCKET)
+                    .destinationKey(newPath)
+                    .build()
+            );
+            System.out.println("File moved successfully: " + newPath);
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            throw e;
+        }
+    }
 
     public InputStream downloadFileFromS3(String filename) {
         S3Client s3Client = awsS3ClientBuilder();
