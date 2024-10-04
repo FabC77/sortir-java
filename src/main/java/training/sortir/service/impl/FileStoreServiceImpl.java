@@ -39,7 +39,7 @@ public class FileStoreServiceImpl implements FileStoreService {
             fileName = generateUniqueFileName(fileName);
             System.out.println("AFTER RENAMED FILE : "+fileName);
             AWSCloudUtil util = new AWSCloudUtil();
-            compressImage(fileName,util, data);
+            util.uploadFileToS3(fileName,data.getBytes());
             System.out.println("AFTER util.uploadFileToS3");
             return fileName;
         } catch (IOException e) {
@@ -49,28 +49,6 @@ public class FileStoreServiceImpl implements FileStoreService {
 
     }
 
-    private void compressImage(String fileName,AWSCloudUtil util, MultipartFile data) throws IOException {
-        byte[] originalData = data.getBytes();
-
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Thumbnails.of(new ByteArrayInputStream(originalData))
-                .size(1000, 1000)
-                .outputQuality(0.40)
-                .outputFormat("jpg")
-                .toOutputStream(outputStream);
-        util.uploadFileToS3(fileName, outputStream.toByteArray());
-
-
-        ByteArrayOutputStream small = new ByteArrayOutputStream();
-        Thumbnails.of(new ByteArrayInputStream(originalData))
-                .size(325, 325)
-                .outputQuality(0.40)
-                .outputFormat("jpg")
-                .toOutputStream(small);
-        util.uploadFileToS3("small/" + fileName, small.toByteArray());
-
-    }
 
     private String generateUniqueFileName(String originalFilename) {
         String nameWithoutExtension = originalFilename.substring(0, originalFilename.lastIndexOf("."));

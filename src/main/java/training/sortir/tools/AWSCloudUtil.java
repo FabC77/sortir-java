@@ -26,6 +26,7 @@ public class AWSCloudUtil {
     private static String AWS_SECRET_KEY;
     private static String AWS_BUCKET;
     private static String S3_URL;
+    private static String AWS_BUCKET_RAW;
 
     @Value("${aws.access.key}")
     private String accessKey;
@@ -35,6 +36,8 @@ public class AWSCloudUtil {
     private String bucket;
     @Value("${aws.s3.baseurl}")
     private String baseUrl;
+    @Value("${aws.s3.bucket.raw}")
+    private String bucketRaw;
 
     @PostConstruct
     public void init() {
@@ -42,6 +45,8 @@ public class AWSCloudUtil {
         AWS_SECRET_KEY = secretKey;
         AWS_BUCKET = bucket;
         S3_URL = baseUrl;
+        AWS_BUCKET_RAW = bucketRaw;
+
     }
 
     private AwsCredentials awsCredentialsProvider() {
@@ -58,15 +63,15 @@ public class AWSCloudUtil {
     }
 
 
-    public void uploadFileToS3(String name, byte[] fileBytes){
+    public void uploadFileToS3(String filename, byte[] fileBytes){
                 System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
 
         S3Client s3Client = awsS3ClientBuilder();
 
-        String filename = "temp-files/"+name;
+        //String filename = "temp-files/"+name;
         try {
             s3Client.putObject(PutObjectRequest.builder()
-                            .bucket(AWS_BUCKET)
+                            .bucket(AWS_BUCKET_RAW)
                             .key(filename)
                             .build(),
                     software.amazon.awssdk.core.sync.RequestBody.fromBytes(fileBytes)
