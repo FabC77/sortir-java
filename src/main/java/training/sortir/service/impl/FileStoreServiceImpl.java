@@ -4,7 +4,8 @@ package training.sortir.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import net.coobird.thumbnailator.Thumbnails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -31,18 +32,19 @@ public class FileStoreServiceImpl implements FileStoreService {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-
+    private static final Logger logger = LoggerFactory.getLogger(FileStoreServiceImpl.class);
 
     private String uploadFileToS3(MultipartFile data) {
         try {
             String fileName = data.getOriginalFilename();
             fileName = generateUniqueFileName(fileName);
-            System.out.println("AFTER RENAMED FILE : "+fileName);
+            logger.info("Renamed file: {}", fileName);
             AWSCloudUtil util = new AWSCloudUtil();
-            util.uploadFileToS3(fileName,data.getBytes());
-            System.out.println("AFTER util.uploadFileToS3");
+            util.uploadFileToS3(fileName, data.getBytes());
+            logger.info("File '{}' successfully uploaded to S3.", fileName);
             return fileName;
         } catch (IOException e) {
+            logger.error("File upload failed for '{}'. Error: {}", data.getOriginalFilename(), e.getMessage());
             e.printStackTrace();
             return String.format("File %s upload failed.", data.getOriginalFilename());
         }
@@ -58,10 +60,10 @@ public class FileStoreServiceImpl implements FileStoreService {
     }
 
     public void deleteFileFromS3(String filename) {
-
+        logger.info("Attempting to delete file '{}' from S3.", filename);
         AWSCloudUtil util = new AWSCloudUtil();
         util.deleteFileFromS3(filename);
-
+        logger.info("File '{}' successfully deleted from S3.", filename);
     }
 
 
@@ -69,24 +71,27 @@ public class FileStoreServiceImpl implements FileStoreService {
     @Transactional
     public void confirmProfilePicture(String filename, User user) {
         if (user.getProfilePicture() != null) {
+            logger.info("Deleting existing profile picture for user '{}'.", user.getUsername());
             deleteFileFromS3(user.getProfilePicture());
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "profile-picture/");
         util.confirmSmallFile(filename, "profile-picture/small/");
-user.setProfilePicture(filename);
+        user.setProfilePicture(filename);
+        logger.info("Profile picture '{}' confirmed for user '{}'.", filename, user.getUsername());
     }
 
     @Override
     public void confirmEventPicture(String filename, Event event) {
         if (event.getPicture() != null) {
+            logger.info("Deleting existing event picture for event '{}'.", event.getId());
             deleteFileFromS3(event.getPicture());
         }
         AWSCloudUtil util = new AWSCloudUtil();
         util.confirmFile(filename, "event-picture/");
         util.confirmSmallFile(filename, "event-picture/small/");
-event.setPicture(filename);
-
+        event.setPicture(filename);
+        logger.info("Event picture '{}' confirmed for event '{}'.", filename, event.getId());
     }
 
     @Override
@@ -102,15 +107,14 @@ event.setPicture(filename);
     }
 
 
-
     @Override
     public String uploadFile(MultipartFile file, String username) throws FileUploadException {
-        System.out.println("IN UPLOAD FILE \n");
+        logger.info("User '{}' initiated file upload.", username);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
-        System.out.println("AFTER USER CHECK \n");
+        logger.info("User '{}' found. Proceeding with file upload.", username);
         String response = uploadFileToS3(file);
-        System.out.println("AFTER uploadFileToS3 method \n");
+        logger.info("File upload process completed for user '{}'.", username);
         return response;
     }
 
@@ -120,9 +124,12 @@ event.setPicture(filename);
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username + ". Unauthorized."));
 
         try {
+            logger.info("User '{}' attempting to cancel file upload '{}'.", username, filename);
             AWSCloudUtil util = new AWSCloudUtil();
             util.deleteFileFromS3("temp-files/" + filename);
+            logger.info("File '{}' successfully canceled and deleted from S3 for user '{}'.", filename, username);
         } catch (AwsServiceException e) {
+            logger.error("Failed to delete file '{}' from S3 for user '{}'. Error: {}", filename, username, e.getMessage());
             throw new FileUploadException("Failed to delete file from S3: " + e.getMessage());
         }
 

@@ -3,6 +3,8 @@ package training.sortir.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,22 +28,15 @@ public class DefaultController {
     private final MessageService messageService;
     private final UserService userService;
     private final MainService mainService;
+    private static final Logger logger = LoggerFactory.getLogger(DefaultController.class);
 
-    /* USERS CRUD - à refaire */
 
+    /* DIVERS */
 
-    @DeleteMapping("/users/{userId}/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
-        if (userService.deleteUser(userId)) {
-            return ResponseEntity.ok().body("Compte supprimé avec succès");
-        } else {
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la suppression du compte");
-        }
-    }
-    @GetMapping("/users")
-    public List<UserDTO> getUsers() {
-        return userService.getUsers();
+    @GetMapping("/campuses")
+    public ResponseEntity<List<CampusDTO>> getCampuses() {
+        List<CampusDTO> response = mainService.getCampuses();
+        return ResponseEntity.ok().body(response);
     }
 
     /* MESSAGE CRUD - Désactivé */
@@ -55,10 +50,6 @@ public class DefaultController {
         return ResponseEntity.badRequest().body("error");
     }
 
-    @GetMapping("/users/{userId}")
-    public UserDTO getUser(@PathVariable UUID userId) {
-        return userService.getUser(userId);
-    }
 
     @DeleteMapping("/messages/{messageId}/delete")
     public ResponseEntity<?> deleteMessage(@PathVariable int messageId) {
@@ -75,11 +66,5 @@ public class DefaultController {
         return messageService.getMessagesFromUser(userId);
     }
 
-    /* DIVERS */
 
-    @GetMapping("/campuses")
-    public ResponseEntity<List<CampusDTO>> getCampuses() {
-        List<CampusDTO> response = mainService.getCampuses();
-        return ResponseEntity.ok().body(response);
-    }
 }
