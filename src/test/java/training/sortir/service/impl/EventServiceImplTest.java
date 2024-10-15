@@ -1,13 +1,9 @@
 package training.sortir.service.impl;
 
-import com.nimbusds.jose.proc.SecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import training.sortir.dto.*;
@@ -21,6 +17,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+//@ExtendWith(MockitoExtension.class)
 @SpringBootTest
 class EventServiceImplTest {
 
@@ -67,13 +64,14 @@ class EventServiceImplTest {
         user.setUsername("testUser");
         user.setFirstname("John");
         user.setLastname("Doe");
+        user.setEmail("jd@example.com");
         user.setCampusId(1);
 
         createEventRequest = new CreateEventRequest();
         createEventRequest.setName("Event Name");
         createEventRequest.setCityName("Test City");
         createEventRequest.setZipCode("12345");
-        createEventRequest.setLocationId("id");
+        createEventRequest.setLocationName("Test Location");
         createEventRequest.setStartDate(new Date());
 
         location = new Location();
@@ -94,27 +92,35 @@ class EventServiceImplTest {
     }
 
     @Test
-    void testRegisterSuccess() {
-  
+    void testCreateEventSuccess() {
+
         when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+        //doReturn(Optional.of(user)).when(userRepository).findByUsername("testUser");
         when(cityRepository.findByNameAndZipCode(anyString(), anyString())).thenReturn(Optional.of(city));
         when(locationRepository.findById(anyString())).thenReturn(Optional.of(location));
         when(campusRepository.findById(anyInt())).thenReturn(Optional.of(campus));
         when(eventRepository.save(any(Event.class))).thenReturn(event);
 
-        EventResponse response = eventService.register(createEventRequest, "testUser");
+        EventResponse response = eventService.createEvent(createEventRequest, "testUser");
 
         assertNotNull(response);
         assertEquals(1, response.getId());
+
+        verify(userRepository, times(1)).findByUsername("testUser");
+        verify(cityRepository, times(1)).findByNameAndZipCode(anyString(), anyString());
+        verify(locationRepository, times(1)).findById(anyString());
+        verify(campusRepository, times(1)).findById(anyInt());
         verify(eventRepository, times(1)).save(any(Event.class));
     }
 
     @Test
-    void testRegisterUserNotFound() {
-        when(userRepository.findByUsername("testUser")).thenReturn(Optional.empty());
+    void testCreateEventUserNotFound() {
+        //when(userRepository.findByUsername("testUser")).thenReturn(Optional.empty());
+        //when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+doReturn(Optional.empty()).when(userRepository).findByUsername("testUser");
 
         Exception exception = assertThrows(UsernameNotFoundException.class, () ->
-                eventService.register(createEventRequest, "testUser")
+                eventService.createEvent(createEventRequest, "testUser")
         );
 
         assertEquals("User not found with username: testUser", exception.getMessage());

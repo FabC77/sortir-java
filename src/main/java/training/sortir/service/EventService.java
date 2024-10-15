@@ -7,7 +7,7 @@ import java.util.List;
 
 @Service
 public interface EventService {
-    EventResponse register(CreateEventRequest event, String username);
+    EventResponse createEvent(CreateEventRequest event, String username);
 
     EventResponse update(UpdateEventRequest event, long id, String username);
 

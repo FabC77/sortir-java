@@ -24,7 +24,7 @@ private static final Logger logger = LoggerFactory.getLogger(EventController.cla
     public ResponseEntity<EventResponse> createEvent(@RequestBody CreateEventRequest request, Principal principal) {
         String username = principal.getName();
         logger.info("User '{}' is creating a new event", username);
-        EventResponse response = eventService.register(request, username);
+        EventResponse response = eventService.createEvent(request, username);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

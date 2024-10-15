@@ -36,7 +36,7 @@ public class EventServiceImpl implements EventService {
     private static final Logger logger = LoggerFactory.getLogger(EventServiceImpl.class);
 
     @Transactional
-    public EventResponse register(CreateEventRequest dto, String username) {
+    public EventResponse createEvent(CreateEventRequest dto, String username) {
         logger.info("Starting event registration for user: {}", username);
 
         User user = userRepository.findByUsername(username)
@@ -178,6 +178,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public boolean cancel(CancelEventRequest dto, long id, String username) {
         logger.info("Cancelling event with ID: {} by user: {}", id, username);
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         Event event = eventRepository.findById(id).orElseThrow();
