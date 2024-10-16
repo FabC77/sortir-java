@@ -9,6 +9,7 @@ import training.sortir.entities.EventStatus;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -25,8 +26,14 @@ public class UpdateEventRequest {
     private String picture;
     private String locationId;
     private String locationName;
+    private String locationNotNamed;
+    private float longitude;
+    private float latitude;
+    private String cityName;
+    private String address;
+    private String zipCode;
     private Date startDate;
-    private Duration duration;
+    private Map<String,Integer> duration;
     private Date deadline;
     private int maxMembers;
 

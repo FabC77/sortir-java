@@ -36,6 +36,7 @@ public interface EventMapper {
     @Mapping(target = "location", ignore = true)
     @Mapping(target = "organizerId", ignore = true)
     @Mapping(target = "picture", ignore = true)
+    @Mapping(target="duration", ignore = true)
     Event dtoToEvent(UpdateEventRequest dto);
 
 

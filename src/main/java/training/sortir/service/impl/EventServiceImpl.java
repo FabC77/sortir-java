@@ -123,6 +123,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventResponse update(UpdateEventRequest dto, long id, String username) {
+        City city = null;
         logger.info("Updating event ID: {} for user: {}", id, username);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
@@ -139,25 +140,52 @@ public class EventServiceImpl implements EventService {
 
         if (dto.getName() != null) event.setName(dto.getName());
         if (dto.getInfos() != null) event.setInfos(dto.getInfos());
+
         if (dto.getStatus() != null) event.setStatus(dto.getStatus());
         if (dto.getReason() != null) event.setReason(dto.getReason());
         if (dto.getPicture() != null) {
             fileStoreService.confirmEventPicture(dto.getPicture(), event);
         }
+        if (dto.getZipCode() != null) {
+            city = cityRepository.findByNameAndZipCode(dto.getCityName(), dto.getZipCode())
+                    .orElseGet(() -> {
+                        logger.info("City not found, creating a new city: {} {}", dto.getCityName(), dto.getZipCode());
+                        City newCity = City.builder()
+                                .name(dto.getCityName())
+                                .zipCode(dto.getZipCode())
+                                .build();
+                        return cityRepository.save(newCity);
+                    });
+        }
         if (dto.getLocationId() != null) {
-            Location location = locationRepository.findById(dto.getLocationId())
-                    .orElseThrow(() -> new EntityNotFoundException("Location not found with ID: " + dto.getLocationId()));
+            Location location = locationRepository.findById(dto.getLocationId()).orElse(null);
+
+            if (location == null) {
+                logger.info("Location not found, creating a new location with ID: {}", dto.getLocationId());
+                location = Location.builder()
+                        .id(dto.getLocationId())
+                        .name(dto.getLocationName() != null ? dto.getLocationName() : dto.getLocationNotNamed())
+                        .latitude(dto.getLatitude())
+                        .longitude(dto.getLongitude())
+                        .address(dto.getAddress())
+                        .city(city)
+                        .build();
+                location = locationRepository.save(location);
+            }
+
             event.setLocation(location);
         }
-        if (dto.getLocationName() != null) {
-            Location location = event.getLocation();
-            if (location != null) {
-                location.setName(dto.getLocationName());
-                locationRepository.save(location);
-            }
-        }
+
         if (dto.getStartDate() != null) event.setStartDate(dto.getStartDate());
-        if (dto.getDuration() != null) event.setDuration(dto.getDuration());
+        if (dto.getDuration() != null) {
+           long hours = dto.getDuration().get("hours");
+            long minutes = dto.getDuration().get("minutes");
+            Duration newDuration = Duration.ofHours(hours)
+                    .plusMinutes(minutes);
+            event.setDuration(newDuration);
+        }
+
+
         if (dto.getDeadline() != null) event.setDeadline(dto.getDeadline());
         if (dto.getMaxMembers() != 0) event.setMaxMembers(dto.getMaxMembers());
 
@@ -170,6 +198,7 @@ public class EventServiceImpl implements EventService {
         eventResponse.setLocationId(event.getLocation().getId());
         eventResponse.setLocationName(event.getLocation().getName());
         eventResponse.setCampusId(campus.getId());
+        eventResponse.setDuration(durationToString(event.getDuration()));
         eventResponse.setCampusName(campus.getName());
 
         return eventResponse;
@@ -313,7 +342,8 @@ public class EventServiceImpl implements EventService {
         if (event.getMembers().contains(user)) {
             dto.setEventMember(true);
         }
-        dto.setDuration(event.getDuration().toHours() + "h" + (event.getDuration().toMinutes() % 60));
+
+        dto.setDuration(durationToString(event.getDuration()));
         User organizer = userRepository.findById(event.getOrganizerId()).orElseThrow();
         dto.setOrganizerName(organizer.getFirstname() + " " + organizer.getLastname());
         logger.info("Returning event details for ID: {}", id);
@@ -436,5 +466,11 @@ public class EventServiceImpl implements EventService {
         }
 
         return hasChanged;
+    }
+
+    private String durationToString(Duration duration) {
+        long hours = duration.toHours() % 24;
+        long minutes = duration.toMinutes() % 60;
+      return hours + "h" + String.format("%02d", minutes);
     }
 }
