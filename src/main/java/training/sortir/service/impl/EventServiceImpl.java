@@ -299,13 +299,15 @@ public class EventServiceImpl implements EventService {
                 response.setPicture(event.getPicture());
             }
             if (event.getOrganizerId().equals(user.getId())) {
-                response.setOrganizerName("Vous");
+               response.setOrganizerName(user.getFirstname()+" "+user.getLastname());
                 response.setOrganizer(true);
             } else {
                 User owner = userRepository.findById(event.getOrganizerId()).orElseThrow();
                 response.setOrganizerName(owner.getFirstname() + " " + owner.getLastname());
             }
             response.setLocationName(event.getLocation().getName());
+            response.setCampusId(event.getCampus().getId());
+            response.setCampusName(event.getCampus().getName());
             userEvents.add(response);
         }
         userEvents.removeIf(event -> event.getStatus() == EventStatus.ARCHIVED);

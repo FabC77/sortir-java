@@ -12,7 +12,9 @@ import training.sortir.dto.*;
 import training.sortir.entities.*;
 import training.sortir.repository.*;
 import training.sortir.service.FileStoreService;
+import training.sortir.tools.EventMapper;
 
+import java.time.Duration;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,10 +47,14 @@ class EventServiceImplTest {
     @Autowired
     private EventServiceImpl eventService;
 
+    @Autowired
+    private EventMapper eventMapper;
+
     private User user;
     private User user2;
     private CreateEventRequest createEventRequest;
     private Event event;
+    private Event event2;
     private Location location;
     private City city;
     private Campus campus;
@@ -105,10 +111,38 @@ class EventServiceImplTest {
         event.setId(1);
         event.setStatus(EventStatus.OPEN);
         event.setOrganizerId(id);
+        event.setCampus(campus);
+        event.setLocation(location);
+        event.setDuration(Duration.ofHours(2));
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, 1);
+        calendar.add(Calendar.MONTH, 2);
         Date eventDate = calendar.getTime();
         event.setStartDate(eventDate);
+        Calendar deadlineCal = Calendar.getInstance();
+        deadlineCal.add(Calendar.MONTH, 1);
+        Date deadline = deadlineCal.getTime();
+        event.setDeadline(deadline);
+        event.setMaxMembers(10);
+
+        event2 = new Event();
+        event2.setId(2);
+        event2.setStatus(EventStatus.CLOSED);
+        UUID id3 = UUID.randomUUID();
+        event2.setOrganizerId(id3);
+        event2.setCampus(campus);
+        event2.setLocation(location);
+        event2.setDuration(Duration.ofHours(1));
+        event2.setMaxMembers(10);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.add(Calendar.MONTH, 3);
+        Date eventDate2 = calendar2.getTime();
+        event2.setStartDate(eventDate2);
+        Calendar deadlineCal2 = Calendar.getInstance();
+        deadlineCal2.add(Calendar.MONTH, 2);
+        Date deadline2 = deadlineCal2.getTime();
+        event2.setDeadline(deadline2);
+
+        user.setEvents(new ArrayList<>(List.of(event, event2)));
     }
 
     @Test
@@ -120,7 +154,7 @@ class EventServiceImplTest {
         when(locationRepository.findById(anyString())).thenReturn(Optional.of(location));
         when(campusRepository.findById(anyInt())).thenReturn(Optional.of(campus));
         when(eventRepository.save(any(Event.class))).thenReturn(event);
-
+user.getEvents().clear();
         EventResponse response = eventService.createEvent(createEventRequest, "testUser");
 
         assertNotNull(response);
@@ -175,7 +209,7 @@ class EventServiceImplTest {
         updateEventRequest.setStartDate(now);
         Map<String, Integer> newDuration = new HashMap<>();
         newDuration.put("hours", 2);
-        newDuration.put("minutes",0);
+        newDuration.put("minutes", 0);
         updateEventRequest.setDuration(newDuration);
         updateEventRequest.setDeadline(now);
         updateEventRequest.setMaxMembers(50);
@@ -212,12 +246,12 @@ class EventServiceImplTest {
 
         assertTrue(result);
         assertEquals(EventStatus.CANCELLED, event.getStatus());
-        assertEquals("Reason for cancellation",event.getReason());
+        assertEquals("Reason for cancellation", event.getReason());
         verify(eventRepository, times(1)).save(event);
     }
 
     @Test
-    void EventCanBeJoined() {
+    void EventShouldBeJoined() {
         when(userRepository.findByUsername("testUser2")).thenReturn(Optional.of(user2));
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(event));
         event.setStatus(EventStatus.OPEN);
@@ -233,7 +267,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    void EventCanBeLeaved() {
+    void EventShouldBeLeaved() {
         when(userRepository.findByUsername("testUser2")).thenReturn(Optional.of(user2));
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(event));
         event.setMembers(new ArrayList<>(List.of(user2)));
@@ -244,4 +278,85 @@ class EventServiceImplTest {
         assertFalse(event.getMembers().contains(user2));
         verify(eventRepository, times(1)).save(event);
     }
+
+    @Test
+    void EventShouldBeRetrieved() {
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(event));
+        when(userRepository.findByUsername("testUser2")).thenReturn(Optional.of(user2));
+        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(user));
+
+        EventResponse response = eventService.getEvent(1, "testUser2");
+
+        assertNotNull(response);
+        assertEquals(event.getId(), response.getId());
+        assertEquals(event.getName(), response.getName());
+        assertEquals(event.getInfos(), response.getInfos());
+        assertEquals(event.getReason(), response.getReason());
+        assertEquals(event.getPicture(), response.getPicture());
+        assertEquals(event.getStatus(), response.getStatus());
+        assertEquals(event.getStartDate(), response.getStartDate(), "Start date should match");
+        assertNotNull(response.getDuration());
+        assertEquals(event.getDeadline(), response.getDeadline(), "Deadline should match");
+        assertEquals(event.getMaxMembers(), response.getMaxMembers());
+        assertEquals(event.getCampus().getId(), response.getCampusId());
+
+        verify(eventRepository,times(1)).findById(1L);
+        verify(userRepository,times(1)).findByUsername("testUser2");
+        verify(userRepository,times(1)).findById(any(UUID.class));
+    }
+
+    @Test
+    void UserEventResponseTransformationShouldBeCorrect() {
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(user2));
+        user.setEvents(List.of(event));
+
+        List<UserEventResponse> rawResponse = eventService.getUserEvents("testUser");
+        UserEventResponse singleEventTransformed = rawResponse.get(0);
+
+        assertNotNull(singleEventTransformed);
+        assertEquals(event.getId(), singleEventTransformed.getId());
+        assertEquals(EventStatus.OPEN, singleEventTransformed.getStatus());
+        assertTrue(singleEventTransformed.isOrganizer());
+        assertEquals(user.getFirstname() + " " + user.getLastname(), singleEventTransformed.getOrganizerName());
+        assertEquals(location.getName(), singleEventTransformed.getLocationName());
+        assertEquals(event.getName(), singleEventTransformed.getName());
+        assertEquals(event.getReason(), singleEventTransformed.getReason());
+        assertEquals(event.getCampus().getId(), singleEventTransformed.getCampusId());
+        assertEquals(event.getCampus().getName(), singleEventTransformed.getCampusName());
+        assertEquals(event.getStartDate(), singleEventTransformed.getStartDate());
+        assertEquals(event.getDeadline(), singleEventTransformed.getDeadline());
+        assertEquals(event.getMaxMembers(), singleEventTransformed.getMaxMembers());
+        assertEquals(event.getCurrentMembers(), singleEventTransformed.getCurrentMembers());
+        assertEquals(event.getLastUpdated(), singleEventTransformed.getLastUpdated());
+        assertEquals(event.getPicture(), singleEventTransformed.getPicture());
+     }
+
+    @Test
+    void UserEventsCountShouldBeRetrieved() {
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(user2));
+
+        List<UserEventResponse> events = eventService.getUserEvents("testUser");
+
+        assertNotNull(events);
+        assertEquals(2, events.size());
+
+        verify(userRepository,times(1)).findByUsername("testUser");
+        verify(userRepository,times(1)).findById(any(UUID.class));
+
+    }
+
+    @Test
+    void ShouldReturnEmptyListWhenNoEvents() {
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+        user.setEvents(Collections.emptyList());
+
+        List<UserEventResponse> events = eventService.getUserEvents("testUser");
+
+        assertNotNull(events);
+        assertTrue(events.isEmpty());
+    }
+
+
 }
